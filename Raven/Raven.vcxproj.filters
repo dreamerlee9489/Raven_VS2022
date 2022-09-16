@@ -271,55 +271,55 @@
     <ClCompile Include="..\Common\misc\WindowUtils.cpp">
       <Filter>Common</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\class.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\class.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\class_info.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\class_info.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\class_registry.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\class_registry.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\class_rep.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\class_rep.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\create_class.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\create_class.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\error.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\error.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\exception_handler.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\exception_handler.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\function.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\function.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\inheritance.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\inheritance.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\link_compatibility.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\link_compatibility.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\object_rep.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\object_rep.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\open.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\open.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\pcall.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\pcall.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\scope.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\scope.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\stack_content_by_name.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\stack_content_by_name.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\weak_ref.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\weak_ref.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\luabind\src\wrapper_base.cpp">
+    <ClCompile Include="..\Common\luabind-0.9.1\src\wrapper_base.cpp">
       <Filter>Game\Script related\luabind</Filter>
     </ClCompile>
   </ItemGroup>

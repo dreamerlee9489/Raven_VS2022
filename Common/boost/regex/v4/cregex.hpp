@@ -124,11 +124,11 @@ typedef enum{
    REG_STARTEND =  00004
 } reg_exec_flags;
 
-//
-// POSIX error codes:
-//
+/*
+ * POSIX error codes:
+ */
 typedef unsigned reg_error_t;
-typedef reg_error_t reg_errcode_t;  // backwards compatibility
+typedef reg_error_t reg_errcode_t;  /* backwards compatibility */
 
 static const reg_error_t REG_NOERROR = 0;   /* Success.  */
 static const reg_error_t REG_NOMATCH = 1;   /* Didn't find a match (for regexec).  */
@@ -154,8 +154,9 @@ static const reg_error_t REG_EMPTY = 17;    /* empty expression */
 static const reg_error_t REG_E_MEMORY = 15; /* = REG_ESIZE : out of memory */
 static const reg_error_t REG_ECOMPLEXITY = 18; /* complexity too high */
 static const reg_error_t REG_ESTACK = 19;   /* out of stack space */
-static const reg_error_t REG_E_UNKNOWN = 20; /* unknown error */
-static const reg_error_t REG_ENOSYS = 20;   /* = REG_E_UNKNOWN : Reserved. */
+static const reg_error_t REG_E_PERL = 20;   /* Perl (?...) error */
+static const reg_error_t REG_E_UNKNOWN = 21; /* unknown error */
+static const reg_error_t REG_ENOSYS = 21;   /* = REG_E_UNKNOWN : Reserved. */
 
 BOOST_REGEX_DECL int BOOST_REGEX_CCALL regcompA(regex_tA*, const char*, int);
 BOOST_REGEX_DECL regsize_t BOOST_REGEX_CCALL regerrorA(int, const regex_tA*, char*, regsize_t);
@@ -195,128 +196,11 @@ BOOST_REGEX_DECL void BOOST_REGEX_CCALL regfreeW(regex_tW*);
 #endif
 
 #ifdef __cplusplus
-} // extern "C"
-} // namespace
+} /* extern "C" */
+} /* namespace */
 #endif
 
-//
-// C++ high level wrapper goes here:
-//
-#if defined(__cplusplus)
-#include <string>
-#include <vector>
-namespace boost{
-
-#ifdef BOOST_MSVC
-#pragma warning(push)
-#pragma warning(disable: 4103)
-#endif
-#ifdef BOOST_HAS_ABI_HEADERS
-#  include BOOST_ABI_PREFIX
-#endif
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
-
-class RegEx;
-
-namespace re_detail{
-
-class RegExData;
-struct pred1;
-struct pred2;
-struct pred3;
-struct pred4;
-
-}  // namespace re_detail
-
-#if (defined(BOOST_MSVC) || defined(__BORLANDC__)) && !defined(BOOST_DISABLE_WIN32)
-typedef bool (__cdecl *GrepCallback)(const RegEx& expression);
-typedef bool (__cdecl *GrepFileCallback)(const char* file, const RegEx& expression);
-typedef bool (__cdecl *FindFilesCallback)(const char* file);
-#else
-typedef bool (*GrepCallback)(const RegEx& expression);
-typedef bool (*GrepFileCallback)(const char* file, const RegEx& expression);
-typedef bool (*FindFilesCallback)(const char* file);
-#endif
-
-class BOOST_REGEX_DECL RegEx
-{
-private:
-   re_detail::RegExData* pdata;
-public:
-   RegEx();
-   RegEx(const RegEx& o);
-   ~RegEx();
-   explicit RegEx(const char* c, bool icase = false);
-   explicit RegEx(const std::string& s, bool icase = false);
-   RegEx& operator=(const RegEx& o);
-   RegEx& operator=(const char* p);
-   RegEx& operator=(const std::string& s){ return this->operator=(s.c_str()); }
-   unsigned int SetExpression(const char* p, bool icase = false);
-   unsigned int SetExpression(const std::string& s, bool icase = false){ return SetExpression(s.c_str(), icase); }
-   std::string Expression()const;
-   unsigned int error_code()const;
-   //
-   // now matching operators:
-   //
-   bool Match(const char* p, match_flag_type flags = match_default);
-   bool Match(const std::string& s, match_flag_type flags = match_default) { return Match(s.c_str(), flags); }
-   bool Search(const char* p, match_flag_type flags = match_default);
-   bool Search(const std::string& s, match_flag_type flags = match_default) { return Search(s.c_str(), flags); }
-   unsigned int Grep(GrepCallback cb, const char* p, match_flag_type flags = match_default);
-   unsigned int Grep(GrepCallback cb, const std::string& s, match_flag_type flags = match_default) { return Grep(cb, s.c_str(), flags); }
-   unsigned int Grep(std::vector<std::string>& v, const char* p, match_flag_type flags = match_default);
-   unsigned int Grep(std::vector<std::string>& v, const std::string& s, match_flag_type flags = match_default) { return Grep(v, s.c_str(), flags); }
-   unsigned int Grep(std::vector<std::size_t>& v, const char* p, match_flag_type flags = match_default);
-   unsigned int Grep(std::vector<std::size_t>& v, const std::string& s, match_flag_type flags = match_default) { return Grep(v, s.c_str(), flags); }
-#ifndef BOOST_REGEX_NO_FILEITER
-   unsigned int GrepFiles(GrepFileCallback cb, const char* files, bool recurse = false, match_flag_type flags = match_default);
-   unsigned int GrepFiles(GrepFileCallback cb, const std::string& files, bool recurse = false, match_flag_type flags = match_default) { return GrepFiles(cb, files.c_str(), recurse, flags); }
-   unsigned int FindFiles(FindFilesCallback cb, const char* files, bool recurse = false, match_flag_type flags = match_default);
-   unsigned int FindFiles(FindFilesCallback cb, const std::string& files, bool recurse = false, match_flag_type flags = match_default) { return FindFiles(cb, files.c_str(), recurse, flags); }
-#endif
-
-   std::string Merge(const std::string& in, const std::string& fmt,
-                       bool copy = true, match_flag_type flags = match_default);
-   std::string Merge(const char* in, const char* fmt,
-                       bool copy = true, match_flag_type flags = match_default);
-
-   std::size_t Split(std::vector<std::string>& v, std::string& s, match_flag_type flags = match_default, unsigned max_count = ~0);
-   //
-   // now operators for returning what matched in more detail:
-   //
-   std::size_t Position(int i = 0)const;
-   std::size_t Length(int i = 0)const;
-   bool Matched(int i = 0)const;
-   std::size_t Marks()const;
-   std::string What(int i = 0)const;
-   std::string operator[](int i)const { return What(i); }
-
-   static const std::size_t npos;
-
-   friend struct re_detail::pred1;
-   friend struct re_detail::pred2;
-   friend struct re_detail::pred3;
-   friend struct re_detail::pred4;
-};
-
-#ifdef BOOST_MSVC
-#pragma warning(push)
-#pragma warning(disable: 4103)
-#endif
-#ifdef BOOST_HAS_ABI_HEADERS
-#  include BOOST_ABI_SUFFIX
-#endif
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
-
-} // namespace boost
-
-#endif
-
-#endif // include guard
+#endif /* include guard */
 
 
 

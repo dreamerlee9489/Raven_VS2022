@@ -36,14 +36,7 @@
 //
 namespace boost{
 
-class BOOST_REGEX_DECL scoped_static_mutex_lock;
-
-class static_mutex
-{
-public:
-   typedef scoped_static_mutex_lock scoped_lock;
-   pthread_mutex_t m_mutex;
-};
+class static_mutex;
 
 #define BOOST_STATIC_MUTEX_INIT { PTHREAD_MUTEX_INITIALIZER, }
 
@@ -67,6 +60,12 @@ private:
    bool m_have_lock;
 };
 
+class static_mutex
+{
+public:
+   typedef scoped_static_mutex_lock scoped_lock;
+   pthread_mutex_t m_mutex;
+};
 
 } // namespace boost
 #elif defined(BOOST_HAS_WINTHREADS)
@@ -96,8 +95,14 @@ class BOOST_REGEX_DECL scoped_static_mutex_lock
 public:
    scoped_static_mutex_lock(static_mutex& mut, bool lk = true);
    ~scoped_static_mutex_lock();
-   operator void const*()const;
-   bool locked()const;
+   operator void const*()const
+   {
+      return locked() ? this : 0;
+   }
+   bool locked()const
+   {
+      return m_have_lock;
+   }
    void lock();
    void unlock();
 private:
@@ -106,16 +111,6 @@ private:
    scoped_static_mutex_lock(const scoped_static_mutex_lock&);
    scoped_static_mutex_lock& operator=(const scoped_static_mutex_lock&);
 };
-
-inline scoped_static_mutex_lock::operator void const*()const
-{
-   return locked() ? this : 0;
-}
-
-inline bool scoped_static_mutex_lock::locked()const
-{
-   return m_have_lock;
-}
 
 } // namespace
 
@@ -130,17 +125,20 @@ inline bool scoped_static_mutex_lock::locked()const
 // Since this preprocessor path is almost never taken, we hide these header
 // dependencies so that build tools don't find them.
 //
-#define B1 <boost/thread/once.hpp>
-#define B2 <boost/thread/recursive_mutex.hpp>
-#include B1
-#include B2
-#undef B1
-#undef B2
+#define BOOST_REGEX_H1 <boost/thread/once.hpp>
+#define BOOST_REGEX_H2 <boost/thread/recursive_mutex.hpp>
+#define BOOST_REGEX_H3 <boost/thread/lock_types.hpp>
+#include BOOST_REGEX_H1
+#include BOOST_REGEX_H2
+#include BOOST_REGEX_H3
+#undef BOOST_REGEX_H1
+#undef BOOST_REGEX_H2
+#undef BOOST_REGEX_H3
 
 namespace boost{
 
 class BOOST_REGEX_DECL scoped_static_mutex_lock;
-extern "C" BOOST_REGEX_DECL void free_static_mutex();
+extern "C" BOOST_REGEX_DECL void boost_regex_free_static_mutex();
 
 class BOOST_REGEX_DECL static_mutex
 {
@@ -163,7 +161,7 @@ public:
    void lock();
    void unlock();
 private:
-   boost::recursive_mutex::scoped_lock* m_plock;
+   boost::unique_lock<boost::recursive_mutex>* m_plock;
    bool m_have_lock;
 };
 

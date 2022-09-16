@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Ion Gaztanaga 2008-2009. Distributed under the Boost
+// (C) Copyright Ion Gaztanaga 2008-2012. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -11,18 +11,23 @@
 #ifndef BOOST_INTERPROCESS_CONTAINERS_FLAT_SET_HPP
 #define BOOST_INTERPROCESS_CONTAINERS_FLAT_SET_HPP
 
-#if (defined _MSC_VER) && (_MSC_VER >= 1200)
+#ifndef BOOST_CONFIG_HPP
+#  include <boost/config.hpp>
+#endif
+#
+#if defined(BOOST_HAS_PRAGMA_ONCE)
 #  pragma once
 #endif
 
 #include <boost/interprocess/detail/config_begin.hpp>
-#include <boost/interprocess/containers/container/flat_set.hpp>
+#include <boost/container/flat_set.hpp>
+#include <boost/interprocess/containers/containers_fwd.hpp>
 
 namespace boost {
 namespace interprocess {
 
-using boost::interprocess_container::flat_set;
-using boost::interprocess_container::flat_multiset;
+using boost::container::flat_set;
+using boost::container::flat_multiset;
 
 }  //namespace interprocess {
 }  //namespace boost {

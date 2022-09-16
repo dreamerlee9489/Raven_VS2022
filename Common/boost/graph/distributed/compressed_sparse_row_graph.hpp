@@ -17,8 +17,7 @@
 #error "Parallel BGL files should not be included unless <boost/graph/use_mpi.hpp> has been included"
 #endif
 
-#define BOOST_GRAPH_USE_NEW_CSR_INTERFACE
-
+#include <boost/assert.hpp>
 #include <boost/graph/compressed_sparse_row_graph.hpp>
 #include <boost/graph/distributed/selector.hpp>
 #include <boost/mpl/if.hpp>
@@ -48,11 +47,11 @@ struct distributed_csr_tag
     public virtual incidence_graph_tag,
     public virtual adjacency_graph_tag {};
 
-template<typename Directed, typename VertexProperty, typename EdgeProperty,
+template<typename VertexProperty, typename EdgeProperty,
          typename GraphProperty, typename ProcessGroup, typename InVertex,
          typename InDistribution, typename InEdgeIndex>
 class compressed_sparse_row_graph<
-         Directed, VertexProperty, EdgeProperty, GraphProperty,
+         directedS, VertexProperty, EdgeProperty, GraphProperty,
          distributedS<ProcessGroup, InVertex, InDistribution>,
          InEdgeIndex>
 {
@@ -84,7 +83,7 @@ class compressed_sparse_row_graph<
   /**
    * The type of the CSR graph that will be stored locally.
    */
-  typedef compressed_sparse_row_graph<Directed, VertexProperty, EdgeProperty,
+  typedef compressed_sparse_row_graph<directedS, VertexProperty, EdgeProperty,
                                       GraphProperty, Vertex, EdgeIndex>
     base_type;
 
@@ -131,14 +130,20 @@ class compressed_sparse_row_graph<
 
   // -----------------------------------------------------------------
   // Workarounds
+  // NOTE: This graph type does not have old-style graph properties. It only
+  // accepts bundles.
   typedef no_property vertex_property_type;
   typedef no_property edge_property_type;
+  typedef no_property graph_property_type;
   typedef typename mpl::if_<is_void<VertexProperty>,
                             void****,
                             VertexProperty>::type vertex_bundled;
   typedef typename mpl::if_<is_void<EdgeProperty>,
                             void****,
                             EdgeProperty>::type edge_bundled;
+  typedef typename mpl::if_<is_void<GraphProperty>,
+                            void****,
+                            GraphProperty>::type graph_bundled;
 
   // -----------------------------------------------------------------
   // Useful types
@@ -178,8 +183,6 @@ class compressed_sparse_row_graph<
                               const ProcessGroup& pg,
                               const Distribution& dist)
     : m_process_group(pg), m_distribution(dist), m_base(numverts) {}
-
-#ifdef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
 
   template <typename InputIterator>
   compressed_sparse_row_graph(edges_are_unsorted_t,
@@ -322,8 +325,6 @@ class compressed_sparse_row_graph<
                               const Distribution& dist,
                               const GraphProperty& prop = GraphProperty());
 
-#endif
-
   template<typename InputIterator>
   compressed_sparse_row_graph(InputIterator edge_begin, InputIterator edge_end,
                               vertices_size_type numverts,
@@ -364,30 +365,22 @@ class compressed_sparse_row_graph<
   // Directly access a vertex or edge bundle
   vertex_bundled& operator[](vertex_descriptor v)
   {
-    std::pair<process_id_type, vertex_descriptor> locator
-      = get(vertex_global, *this, v);
-    assert(locator.first == process_id(m_process_group));
-    return base().m_vertex_properties[locator.second];
+    return get(vertex_bundle, *this, v);
   }
 
   const vertex_bundled& operator[](vertex_descriptor v) const
   {
-    std::pair<process_id_type, vertex_descriptor> locator
-      = get(vertex_global, *this, v);
-    assert(locator.first == process_id(m_process_group));
-    return base().m_process_group[locator.second];
+    return get(vertex_bundle, *this, v);
   }
 
   edge_bundled& operator[](edge_descriptor e)
   {
-    assert(get(vertex_owner, *this, e.src) == process_id(m_process_group));
-    return base().m_edge_properties[e.idx];
+    return get(edge_bundle, *this, e);
   }
 
   const edge_bundled& operator[](edge_descriptor e) const
   {
-    assert(get(vertex_owner, *this, e.src) == process_id(m_process_group));
-    return base().m_edge_properties[e.idx];
+    return get(edge_bundle, *this, e);
   }
 
   // Create a vertex descriptor from a process ID and a local index.
@@ -471,7 +464,7 @@ class compressed_sparse_row_graph<
  *  graph type.
  */
 #define BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS                          \
-  typename Directed, typename VertexProperty, typename EdgeProperty,    \
+  typename VertexProperty, typename EdgeProperty,    \
   typename GraphProperty, typename ProcessGroup, typename InVertex,     \
   typename InDistribution, typename InEdgeIndex
 
@@ -487,7 +480,7 @@ class compressed_sparse_row_graph<
  */
 #define BOOST_DISTRIB_CSR_GRAPH_TYPE                            \
   compressed_sparse_row_graph<                                  \
-    Directed, VertexProperty, EdgeProperty, GraphProperty,      \
+    directedS, VertexProperty, EdgeProperty, GraphProperty,      \
     distributedS<ProcessGroup, InVertex, InDistribution>,       \
     InEdgeIndex>
 
@@ -525,8 +518,8 @@ out_edges(typename BOOST_DISTRIB_CSR_GRAPH_TYPE::vertex_descriptor u,
   typedef typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edge_descriptor ed;
   typedef typename BOOST_DISTRIB_CSR_GRAPH_TYPE::out_edge_iterator it;
   edges_size_type u_local = get(vertex_local, g, u);
-  edges_size_type u_row_start = g.base().m_rowstart[u_local];
-  edges_size_type next_row_start = g.base().m_rowstart[u_local + 1];
+  edges_size_type u_row_start = g.base().m_forward.m_rowstart[u_local];
+  edges_size_type next_row_start = g.base().m_forward.m_rowstart[u_local + 1];
   return std::make_pair(it(ed(u, u_row_start)),
                         it(ed(u, (std::max)(u_row_start, next_row_start))));
 }
@@ -544,7 +537,6 @@ out_degree(typename BOOST_DISTRIB_CSR_GRAPH_TYPE::vertex_descriptor u,
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
 void synchronize(const BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
 {
-  typedef BOOST_DISTRIB_CSR_GRAPH_TYPE graph_type;
   synchronize(g.process_group());
 }
 
@@ -658,7 +650,7 @@ class BOOST_DISTRIB_CSR_GRAPH_TYPE::edge_iterator
     while (current_edge.idx == end_of_this_vertex && local_src < num_vertices(*graph)-1) {
       ++local_src;
       current_edge.src = graph->local_to_global_vertex(local_src);
-      end_of_this_vertex = graph->base().m_rowstart[local_src + 1];
+      end_of_this_vertex = graph->base().m_forward.m_rowstart[local_src + 1];
     }
     return *this;
   }
@@ -680,7 +672,7 @@ template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
 inline typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edges_size_type
 num_edges(const BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
 {
-  return g.base().m_column.size();
+  return g.base().m_forward.m_column.size();
 }
 
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
@@ -691,21 +683,41 @@ edges(const BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
   typedef typename BOOST_DISTRIB_CSR_GRAPH_TYPE::vertex_descriptor Vertex;
   typedef typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edge_iterator ei;
   typedef typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edge_descriptor edgedesc;
-  if (g.base().m_rowstart.size() == 1 || g.base().m_column.empty()) {
+  if (g.base().m_forward.m_rowstart.size() == 1 ||
+      g.base().m_forward.m_column.empty()) {
     return std::make_pair(ei(), ei());
   } else {
     // Find the first vertex that has outgoing edges
     Vertex src = 0;
-    while (g.base().m_rowstart[src + 1] == 0) ++src;
-    return std::make_pair(ei(g, edgedesc(src, 0), g.base().m_rowstart[src + 1]),
-                          ei(g, edgedesc(num_vertices(g), g.base().m_column.size()), 0));
+    while (g.base().m_forward.m_rowstart[src + 1] == 0) ++src;
+    return std::make_pair(ei(g, edgedesc(src, 0), g.base().m_forward.m_rowstart[src + 1]),
+                          ei(g, edgedesc(num_vertices(g), g.base().m_forward.m_column.size()), 0));
   }
 }
 
 // -----------------------------------------------------------------
 // Graph constructors
 
-#ifdef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
+// Returns true if a vertex belongs to a process according to a distribution
+template <typename OwnerMap, typename ProcessId>
+struct local_vertex {
+
+  local_vertex(OwnerMap owner, ProcessId id) 
+    : owner(owner), id(id) {}
+
+  template <typename Vertex>
+  bool operator()(Vertex x) 
+  { return get(owner, x) == id; }
+
+  template <typename Vertex>
+  bool operator()(Vertex x) const
+  { return get(owner, x) == id; }
+
+private:
+  OwnerMap owner;
+  ProcessId id;
+};
+
 // Returns true if a vertex belongs to a process according to a distribution
 template <typename OwnerMap, typename ProcessId>
 struct local_edge {
@@ -805,12 +817,9 @@ make_index_to_vertex_iterator(IndexIterator it, const Distribution& dist,
   return boost::make_transform_iterator(
     it, index_to_vertex_func<Distribution, Graph>(dist, g));
 }
-#endif
 
 // Forward declaration of csr_vertex_owner_map
 template<typename ProcessID, typename Key> class csr_vertex_owner_map;
-
-#ifdef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
 
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
 template<typename InputIterator>
@@ -827,8 +836,8 @@ compressed_sparse_row_graph(edges_are_unsorted_t,
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_end, *this),
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
 { }
 
@@ -848,8 +857,8 @@ compressed_sparse_row_graph(edges_are_unsorted_t,
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_end, *this),
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
 { }
 
@@ -870,8 +879,8 @@ compressed_sparse_row_graph(edges_are_unsorted_t,
            ep_iter,
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
 { }
 
@@ -894,8 +903,8 @@ compressed_sparse_row_graph(edges_are_unsorted_t,
            ep_iter,
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
 { }
 
@@ -914,8 +923,8 @@ compressed_sparse_row_graph(edges_are_sorted_t,
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_begin, *this),
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_end, *this),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            m_distribution.block_size(process_id(m_process_group), numverts),
            prop)
 { }
@@ -935,8 +944,8 @@ compressed_sparse_row_graph(edges_are_sorted_t,
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_begin, *this),
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_end, *this),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            m_distribution.block_size(process_id(m_process_group), numverts),
            prop)
 { }
@@ -958,8 +967,8 @@ compressed_sparse_row_graph(edges_are_sorted_t,
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_end, *this),
            ep_iter,
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            m_distribution.block_size(process_id(m_process_group), numverts),
            prop)
 { }
@@ -982,8 +991,8 @@ compressed_sparse_row_graph(edges_are_sorted_t,
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_end, *this),
            ep_iter,
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            m_distribution.block_size(process_id(m_process_group), numverts),
            prop)
 { }
@@ -1004,8 +1013,8 @@ compressed_sparse_row_graph(edges_are_unsorted_multi_pass_t,
            make_index_to_vertex_iterator(edge_end, parallel::block(m_process_group, numverts), *this),
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
 { }
 
@@ -1026,8 +1035,8 @@ compressed_sparse_row_graph(edges_are_unsorted_multi_pass_t,
            make_index_to_vertex_iterator(edge_end, parallel::block(m_process_group, numverts), *this),
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
 { }
 
@@ -1050,8 +1059,8 @@ compressed_sparse_row_graph(edges_are_unsorted_multi_pass_t,
            ep_iter,
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
 { }
 
@@ -1075,8 +1084,8 @@ compressed_sparse_row_graph(edges_are_unsorted_multi_pass_t,
            ep_iter,
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
 { }
 
@@ -1194,8 +1203,6 @@ compressed_sparse_row_graph(distributed_construct_inplace_from_sources_and_targe
   // TODO: set property on m_base?
 }
 
-#endif
-
 //
 // Old (untagged) ctors, these default to the unsorted sequential ctors
 //
@@ -1208,39 +1215,16 @@ compressed_sparse_row_graph(InputIterator edge_begin, InputIterator edge_end,
                             const GraphProperty& prop)
   : m_process_group(pg),
     m_distribution(parallel::block(m_process_group, numverts)),
-#ifndef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
-    m_base(m_distribution.block_size(process_id(m_process_group), numverts))
-#else
     m_base(edges_are_unsorted_global,
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_begin, *this),
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_end, *this),
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
-#endif    
            
 {
-#ifndef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
-  parallel::block dist(m_process_group, numverts);
-
-  // Allows us to add edges
-  m_base.m_last_source = 0;
-
-  typename ProcessGroup::process_id_type id = process_id(m_process_group);
-
-  while (edge_begin != edge_end) {
-    vertex_descriptor src = edge_begin->first;
-    if (static_cast<process_id_type>(dist(src)) == id) {
-      vertex_descriptor tgt = 
-        make_vertex_descriptor(dist(edge_begin->second), 
-                               dist.local(edge_begin->second));
-      add_edge(dist.local(src), tgt, m_base);
-    }
-    ++edge_begin;
-  }
-#endif
 }
 
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
@@ -1254,40 +1238,16 @@ compressed_sparse_row_graph(InputIterator edge_begin, InputIterator edge_end,
   : m_process_group(pg),
 
     m_distribution(parallel::block(m_process_group, numverts)),
-#ifndef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
-    m_base(m_distribution.block_size(process_id(m_process_group), numverts))
-#else
     m_base(edges_are_unsorted_global,
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_begin, *this),
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_end, *this),
            ep_iter,
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
-#endif
 {
-#ifndef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
-  parallel::block dist(m_process_group, numverts);
-
-  // Allows us to add edges
-  m_base.m_last_source = 0;
-
-  typename ProcessGroup::process_id_type id = process_id(m_process_group);
-
-  while (edge_begin != edge_end) {
-    EdgeIndex src = edge_begin->first;
-    if (static_cast<process_id_type>(dist(src)) == id) {
-      EdgeIndex tgt = 
-        make_vertex_descriptor(dist(edge_begin->second), 
-                               dist.local(edge_begin->second));
-      add_edge(dist.local(src), tgt, *ep_iter, m_base);
-    }
-    ++edge_begin;
-    ++ep_iter;
-  }
-#endif
 }
 
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
@@ -1300,38 +1260,15 @@ compressed_sparse_row_graph(InputIterator edge_begin, InputIterator edge_end,
                             const GraphProperty& prop)
   : m_process_group(pg),
     m_distribution(dist),
-#ifndef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
-    m_base(dist.block_size(process_id(m_process_group), numverts))
-#else
     m_base(edges_are_unsorted_global,
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_begin, *this),
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_end, *this),
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
-#endif
 {
-#ifndef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
-  // Allows us to add edges
-  m_base.m_last_source = 0;
-
-  typename ProcessGroup::process_id_type id = process_id(m_process_group);
-
-  while (edge_begin != edge_end) {
-    vertex_descriptor src = edge_begin->first;
-    if (static_cast<process_id_type>(dist(src)) == id) {
-      vertex_descriptor tgt = 
-        make_vertex_descriptor(dist(edge_begin->second), 
-                               dist.local(edge_begin->second));
-      assert(get(vertex_owner, *this, tgt) == dist(edge_begin->second));
-      assert(get(vertex_local, *this, tgt) == dist.local(edge_begin->second));
-      add_edge(dist.local(src), tgt, m_base);
-    }
-    ++edge_begin;
-  }
-#endif
 }
 
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
@@ -1346,37 +1283,15 @@ compressed_sparse_row_graph(InputIterator edge_begin, InputIterator edge_end,
                             const GraphProperty& prop)
   : m_process_group(pg),
     m_distribution(dist),
-#ifndef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
-    m_base(dist.block_size(process_id(m_process_group), numverts))
-#else
     m_base(edges_are_unsorted_global,
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_begin, *this),
            index_to_vertex_iterator<InputIterator, BOOST_DISTRIB_CSR_GRAPH_TYPE>(edge_end, *this),
            m_distribution.block_size(process_id(m_process_group), numverts),
            get(vertex_local, *this),
-           local_edge<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
-                      process_id_type> (get(vertex_owner, *this), process_id(pg)),
+           local_vertex<csr_vertex_owner_map<process_id_type, vertex_descriptor>, 
+                        process_id_type> (get(vertex_owner, *this), process_id(pg)),
            prop)
-#endif
 {
-#ifndef BOOST_GRAPH_USE_NEW_CSR_INTERFACE
-  // Allows us to add edges
-  m_base.m_last_source = 0;
-
-  typename ProcessGroup::process_id_type id = process_id(m_process_group);
-
-  while (edge_begin != edge_end) {
-    EdgeIndex src = edge_begin->first;
-    if (static_cast<process_id_type>(dist(src)) == id) {
-      EdgeIndex tgt = 
-        make_vertex_descriptor(dist(edge_begin->second), 
-                               dist.local(edge_begin->second));
-      add_edge(dist.local(src), tgt, *ep_iter, m_base);
-    }
-    ++edge_begin;
-    ++ep_iter;
-  }
-#endif
 }
 
 // -----------------------------------------------------------------
@@ -1494,8 +1409,8 @@ edge_range(typename BOOST_DISTRIB_CSR_GRAPH_TYPE::vertex_descriptor i,
   std::pair<adj_iter, adj_iter> raw_adjacencies = adjacent_vertices(i, g);
   std::pair<adj_iter, adj_iter> adjacencies =
     std::equal_range(raw_adjacencies.first, raw_adjacencies.second, j);
-  EdgeIndex idx_begin = adjacencies.first - g.base().m_column.begin();
-  EdgeIndex idx_end = adjacencies.second - g.base().m_column.begin();
+  EdgeIndex idx_begin = adjacencies.first - g.base().m_forward.m_column.begin();
+  EdgeIndex idx_end = adjacencies.second - g.base().m_forward.m_column.begin();
   return std::make_pair(out_edge_iter(edge_desc(i, idx_begin)),
                         out_edge_iter(edge_desc(i, idx_end)));
 }
@@ -1833,19 +1748,22 @@ class csr_edge_global_map
  public:
   // -----------------------------------------------------------------
   // Readable Property Map concept requirements
-  typedef std::pair<ProcessID, EdgeIndex> value_type;
+  typedef detail::csr_edge_descriptor<Vertex, EdgeIndex> key_type;
+  typedef std::pair<ProcessID, detail::csr_edge_descriptor<Vertex, EdgeIndex> > value_type;
   typedef value_type reference;
-  typedef csr_edge_descriptor<Vertex, EdgeIndex> key_type;
   typedef readable_property_map_tag category;
 };
 
 template<typename ProcessID, typename Vertex, typename EdgeIndex>
-inline std::pair<ProcessID, EdgeIndex>
+inline std::pair<ProcessID, detail::csr_edge_descriptor<Vertex, EdgeIndex> >
 get(csr_edge_global_map<ProcessID, Vertex, EdgeIndex> pm,
     typename csr_edge_global_map<ProcessID, Vertex, EdgeIndex>::key_type k)
 {
   const int local_index_bits = sizeof(Vertex) * CHAR_BIT - processor_bits;
-  return std::pair<ProcessID, EdgeIndex>(k.src >> local_index_bits, k.idx);
+  const Vertex local_index_mask = Vertex(-1) >> processor_bits;
+  return std::pair<ProcessID, detail::csr_edge_descriptor<Vertex, EdgeIndex> >
+           ((k.src >> local_index_bits),
+            detail::csr_edge_descriptor<Vertex, EdgeIndex>(k.src & local_index_mask, k.idx));
 }
 
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
@@ -1872,7 +1790,7 @@ get(edge_global_t, BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
 inline
 std::pair<typename ProcessGroup::process_id_type,
-          typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edges_size_type>
+          typename BOOST_DISTRIB_CSR_GRAPH_TYPE::base_type::edge_descriptor>
 get(edge_global_t, BOOST_DISTRIB_CSR_GRAPH_TYPE& g,
     typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edge_descriptor k)
 {
@@ -1894,7 +1812,7 @@ get(edge_global_t, const BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
 inline
 std::pair<typename ProcessGroup::process_id_type,
-          typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edges_size_type>
+          typename BOOST_DISTRIB_CSR_GRAPH_TYPE::base_type::edge_descriptor>
 get(edge_global_t, const BOOST_DISTRIB_CSR_GRAPH_TYPE& g,
     typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edge_descriptor k)
 {
@@ -1903,12 +1821,16 @@ get(edge_global_t, const BOOST_DISTRIB_CSR_GRAPH_TYPE& g,
 
   const int local_index_bits = 
     sizeof(vertex_descriptor) * CHAR_BIT - processor_bits;
+  const typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edges_size_type local_index_mask =
+    typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edges_size_type(-1) >> processor_bits;
   
   typedef std::pair<typename ProcessGroup::process_id_type,
-                    typename BOOST_DISTRIB_CSR_GRAPH_TYPE::edges_size_type>
+                    typename BOOST_DISTRIB_CSR_GRAPH_TYPE::base_type::edge_descriptor>
     result_type;
 
-  return result_type(k.src >> local_index_bits, k.idx);
+  return result_type(k.src >> local_index_bits,
+                     typename BOOST_DISTRIB_CSR_GRAPH_TYPE::base_type::edge_descriptor
+                       (k.src & local_index_mask, k.idx));
 }
 
 // -----------------------------------------------------------------
@@ -1923,7 +1845,8 @@ class property_map<BOOST_DISTRIB_CSR_GRAPH_TYPE, edge_index_t>
   typedef local_property_map<
             typename BOOST_DISTRIB_CSR_GRAPH_TYPE::process_group_type,
             global_map,
-            identity_property_map> type;
+            typename property_map<typename BOOST_DISTRIB_CSR_GRAPH_TYPE::base_type, edge_index_t>::type
+          > type;
   typedef type const_type;
 };
 
@@ -1935,7 +1858,7 @@ get(edge_index_t, BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
   typedef typename property_map<BOOST_DISTRIB_CSR_GRAPH_TYPE, edge_index_t>
     ::type result_type;
   return result_type(g.process_group(), get(edge_global, g),
-                     identity_property_map());
+                     get(edge_index, g.base()));
 }
 
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
@@ -1954,7 +1877,7 @@ get(edge_index_t, const BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
   typedef typename property_map<BOOST_DISTRIB_CSR_GRAPH_TYPE, edge_index_t>
     ::const_type result_type;
   return result_type(g.process_group(), get(edge_global, g),
-                     identity_property_map());
+                     get(edge_index, g.base()));
 }
 
 template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS>
@@ -1965,42 +1888,33 @@ get(edge_index_t, const BOOST_DISTRIB_CSR_GRAPH_TYPE& g,
   return k.idx;
 }
 
-// -----------------------------------------------------------------
-// Bundled Properties
-template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS, typename T, typename Bundle>
-class property_map<BOOST_DISTRIB_CSR_GRAPH_TYPE, T Bundle::*>
-{
-  typedef BOOST_DISTRIB_CSR_GRAPH_TYPE Graph;
-  typedef typename Graph::process_group_type process_group_type;
+template <BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS, typename Tag>
+class property_map<BOOST_DISTRIB_CSR_GRAPH_TYPE, Tag> {
+  typedef BOOST_DISTRIB_CSR_GRAPH_TYPE graph_type;
+  typedef typename graph_type::process_group_type process_group_type;
+  typedef typename graph_type::base_type base_graph_type;
+  typedef typename property_map<base_graph_type, Tag>::type
+    local_pmap;
+  typedef typename property_map<base_graph_type, Tag>::const_type
+    local_const_pmap;
 
-  // Determine which locator map to use (vertex or edge)
-  typedef typename mpl::if_<detail::is_vertex_bundle<VertexProperty,
-                                                     EdgeProperty,
-                                                     Bundle>,
-                            vertex_global_t, edge_global_t>::type global_t;
+  typedef graph_traits<graph_type> traits;
+  typedef typename graph_traits<base_graph_type>::vertex_descriptor local_vertex;
+  typedef typename property_traits<local_pmap>::key_type local_key_type;
 
-  // Extract the global property map for our key type.
-  typedef typename property_map<Graph, global_t>::const_type global_map;
-  typedef typename property_traits<global_map>::value_type locator;
+  typedef typename property_traits<local_pmap>::value_type value_type;
 
-  // Determine which bundle type we are using
-  typedef typename mpl::if_<detail::is_vertex_bundle<VertexProperty,
-                                                     EdgeProperty,
-                                                     Bundle>,
-                            VertexProperty, EdgeProperty>::type bundle_t;
+  typedef typename property_map<graph_type, vertex_global_t>::const_type
+    vertex_global_map;
+  typedef typename property_map<graph_type, edge_global_t>::const_type
+    edge_global_map;
+
+  typedef typename mpl::if_<is_same<typename detail::property_kind_from_graph<base_graph_type, Tag>::type,
+                                    vertex_property_tag>,
+                            vertex_global_map, edge_global_map>::type
+    global_map;
 
 public:
-  // Build the local property map
-  typedef bundle_property_map<std::vector<bundle_t>,
-                              typename locator::second_type,
-                              bundle_t,
-                              T> local_pmap;
-
-  // Build the local const property map
-  typedef bundle_property_map<const std::vector<bundle_t>,
-                              typename locator::second_type,
-                              bundle_t,
-                              const T> local_const_pmap;
   typedef ::boost::parallel::distributed_property_map<
             process_group_type, global_map, local_pmap> type;
 
@@ -2008,77 +1922,33 @@ public:
             process_group_type, global_map, local_const_pmap> const_type;
 };
 
-namespace detail {
-  // Retrieve the local bundle_property_map corresponding to a
-  // non-const vertex property.
-  template<typename Graph, typename T, typename Bundle>
-  inline bundle_property_map<std::vector<typename Graph::vertex_bundled>,
-                             typename Graph::vertex_descriptor,
-                             typename Graph::vertex_bundled, T>
-  get_distrib_csr_bundle(T Bundle::* p, Graph& g, mpl::true_)
-  {
-    typedef bundle_property_map<std::vector<typename Graph::vertex_bundled>,
-                                typename Graph::vertex_descriptor,
-                                typename Graph::vertex_bundled, T> result_type;
-    return result_type(&g.base().vertex_properties().m_vertex_properties, p);
-  }
-
-  // Retrieve the local bundle_property_map corresponding to a
-  // const vertex property.
-  template<typename Graph, typename T, typename Bundle>
-  inline bundle_property_map<const std::vector<typename Graph::vertex_bundled>,
-                             typename Graph::vertex_descriptor,
-                             typename Graph::vertex_bundled, const T>
-  get_distrib_csr_bundle(T Bundle::* p, const Graph& g, mpl::true_)
-  {
-    typedef bundle_property_map<
-              const std::vector<typename Graph::vertex_bundled>,
-              typename Graph::vertex_descriptor,
-              typename Graph::vertex_bundled, const T> result_type;
-    return result_type(&g.base().vertex_properties().m_vertex_properties, p);
-  }
-
-  // Retrieve the local bundle_property_map corresponding to a
-  // non-const edge property.
-  template<typename Graph, typename T, typename Bundle>
-  inline bundle_property_map<std::vector<typename Graph::edge_bundled>,
-                             typename Graph::edges_size_type,
-                             typename Graph::edge_bundled, T>
-  get_distrib_csr_bundle(T Bundle::* p, Graph& g, mpl::false_)
-  {
-    typedef bundle_property_map<std::vector<typename Graph::edge_bundled>,
-                                typename Graph::edges_size_type,
-                                typename Graph::edge_bundled, T> result_type;
-    return result_type(&g.base().edge_properties().m_edge_properties, p);
-  }
-
-  // Retrieve the local bundle_property_map corresponding to a
-  // const edge property.
-  template<typename Graph, typename T, typename Bundle>
-  inline bundle_property_map<const std::vector<typename Graph::edge_bundled>,
-                             typename Graph::edges_size_type,
-                             typename Graph::edge_bundled, const T>
-  get_distrib_csr_bundle(T Bundle::* p, const Graph& g, mpl::false_)
-  {
-    typedef bundle_property_map<
-              const std::vector<typename Graph::edge_bundled>,
-              typename Graph::edges_size_type,
-              typename Graph::edge_bundled, const T> result_type;
-    return result_type(&g.base().edge_properties().m_edge_properties, p);
-  }
-}
-
-template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS, typename T, typename Bundle>
-typename property_map<BOOST_DISTRIB_CSR_GRAPH_TYPE, T Bundle::*>::type
-get(T Bundle::* p, BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
+template <BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS, typename Tag>
+typename property_map<BOOST_DISTRIB_CSR_GRAPH_TYPE, Tag>::type
+get(Tag tag, BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
 {
   typedef BOOST_DISTRIB_CSR_GRAPH_TYPE Graph;
-  typedef typename property_map<Graph, T Bundle::*>::type result_type;
-  typedef typename property_map<Graph, T Bundle::*>::local_pmap local_pmap;
-
-  // Resolver
+  typedef typename property_map<Graph, Tag>::type result_type;
   typedef typename property_traits<result_type>::value_type value_type;
-  typedef typename property_reduce<T Bundle::*>::template apply<value_type>
+  typedef typename property_reduce<Tag>::template apply<value_type>
+    reduce;
+
+  typedef typename mpl::if_<is_same<typename detail::property_kind_from_graph<Graph, Tag>::type,
+                                    vertex_property_tag>,
+                            vertex_global_t, edge_global_t>::type
+    global_map_t;
+
+  return result_type(g.process_group(), get(global_map_t(), g),
+                     get(tag, g.base()), reduce());
+}
+
+template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS, typename Tag>
+typename property_map<BOOST_DISTRIB_CSR_GRAPH_TYPE, Tag>::const_type
+get(Tag tag, const BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
+{
+  typedef BOOST_DISTRIB_CSR_GRAPH_TYPE Graph;
+  typedef typename property_map<Graph, Tag>::const_type result_type;
+  typedef typename property_traits<result_type>::value_type value_type;
+  typedef typename property_reduce<Tag>::template apply<value_type>
     reduce;
 
   typedef typename property_traits<result_type>::key_type descriptor;
@@ -2088,56 +1958,26 @@ get(T Bundle::* p, BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
     global_map_t;
 
   return result_type(g.process_group(), get(global_map_t(), g),
-                     detail::get_distrib_csr_bundle
-                       (p, g, mpl::bool_<is_same<descriptor,
-                                         vertex_descriptor>::value>()),
-                     reduce());
-}
-
-template<BOOST_DISTRIB_CSR_GRAPH_TEMPLATE_PARMS, typename T, typename Bundle>
-typename property_map<BOOST_DISTRIB_CSR_GRAPH_TYPE, T Bundle::*>::const_type
-get(T Bundle::* p, const BOOST_DISTRIB_CSR_GRAPH_TYPE& g)
-{
-  typedef BOOST_DISTRIB_CSR_GRAPH_TYPE Graph;
-  typedef typename property_map<Graph, T Bundle::*>::const_type result_type;
-  typedef typename property_map<Graph, T Bundle::*>::local_const_pmap
-    local_pmap;
-
-  // Resolver
-  typedef typename property_traits<result_type>::value_type value_type;
-  typedef typename property_reduce<T Bundle::*>::template apply<value_type>
-    reduce;
-
-  typedef typename property_traits<result_type>::key_type descriptor;
-  typedef typename graph_traits<Graph>::vertex_descriptor vertex_descriptor;
-  typedef typename mpl::if_<is_same<descriptor, vertex_descriptor>,
-                            vertex_global_t, edge_global_t>::type
-    global_map_t;
-
-  return result_type(g.process_group(), get(global_map_t(), g),
-                     detail::get_distrib_csr_bundle
-                       (p, g, mpl::bool_<is_same<descriptor,
-                                                 vertex_descriptor>::value>()),
-                     reduce());
+                     get(tag, g.base()), reduce());
 }
 
 namespace mpi {
   template<typename Vertex, typename EdgeIndex>
-  struct is_mpi_datatype<csr_edge_descriptor<Vertex, EdgeIndex> >
+  struct is_mpi_datatype<boost::detail::csr_edge_descriptor<Vertex, EdgeIndex> >
     : mpl::true_ { };
 }
 
 namespace serialization {
   template<typename Vertex, typename EdgeIndex>
-  struct is_bitwise_serializable<csr_edge_descriptor<Vertex, EdgeIndex> >
+  struct is_bitwise_serializable<boost::detail::csr_edge_descriptor<Vertex, EdgeIndex> >
     : mpl::true_ { };
 
   template<typename Vertex, typename EdgeIndex>
-  struct implementation_level<csr_edge_descriptor<Vertex, EdgeIndex> >
+  struct implementation_level<boost::detail::csr_edge_descriptor<Vertex, EdgeIndex> >
    : mpl::int_<object_serializable> {} ;
 
   template<typename Vertex, typename EdgeIndex>
-  struct tracking_level<csr_edge_descriptor<Vertex, EdgeIndex> >
+  struct tracking_level<boost::detail::csr_edge_descriptor<Vertex, EdgeIndex> >
    : mpl::int_<track_never> {} ;
 
 }

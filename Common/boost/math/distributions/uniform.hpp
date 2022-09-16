@@ -116,11 +116,11 @@ namespace boost{ namespace math
     typedef RealType value_type;
     typedef Policy policy_type;
 
-    uniform_distribution(RealType lower = 0, RealType upper = 1) // Constructor.
-      : m_lower(lower), m_upper(upper) // Default is standard uniform distribution.
+    uniform_distribution(RealType l_lower = 0, RealType l_upper = 1) // Constructor.
+      : m_lower(l_lower), m_upper(l_upper) // Default is standard uniform distribution.
     {
       RealType result;
-      detail::check_uniform("boost::math::uniform_distribution<%1%>::uniform_distribution", lower, upper, &result, Policy());
+      detail::check_uniform("boost::math::uniform_distribution<%1%>::uniform_distribution", l_lower, l_upper, &result, Policy());
     }
     // Accessor functions.
     RealType lower()const
@@ -139,6 +139,13 @@ namespace boost{ namespace math
   }; // class uniform_distribution
 
   typedef uniform_distribution<double> uniform;
+
+  #ifdef __cpp_deduction_guides
+  template <class RealType>
+  uniform_distribution(RealType)->uniform_distribution<typename boost::math::tools::promote_args<RealType>::type>;
+  template <class RealType>
+  uniform_distribution(RealType,RealType)->uniform_distribution<typename boost::math::tools::promote_args<RealType>::type>;
+  #endif
 
   template <class RealType, class Policy>
   inline const std::pair<RealType, RealType> range(const uniform_distribution<RealType, Policy>& /* dist */)
@@ -161,7 +168,7 @@ namespace boost{ namespace math
   {
     RealType lower = dist.lower();
     RealType upper = dist.upper();
-    RealType result; // of checks.
+    RealType result = 0; // of checks.
     if(false == detail::check_uniform("boost::math::pdf(const uniform_distribution<%1%>&, %1%)", lower, upper, &result, Policy()))
     {
       return result;
@@ -186,7 +193,7 @@ namespace boost{ namespace math
   {
     RealType lower = dist.lower();
     RealType upper = dist.upper();
-    RealType result; // of checks.
+    RealType result = 0; // of checks.
     if(false == detail::check_uniform("boost::math::cdf(const uniform_distribution<%1%>&, %1%)",lower, upper, &result, Policy()))
     {
       return result;
@@ -211,7 +218,7 @@ namespace boost{ namespace math
   {
     RealType lower = dist.lower();
     RealType upper = dist.upper();
-    RealType result; // of checks
+    RealType result = 0; // of checks
     if(false == detail::check_uniform("boost::math::quantile(const uniform_distribution<%1%>&, %1%)",lower, upper, &result, Policy()))
     {
       return result;
@@ -237,7 +244,7 @@ namespace boost{ namespace math
     RealType lower = c.dist.lower();
     RealType upper = c.dist.upper();
     RealType x = c.param;
-    RealType result; // of checks.
+    RealType result = 0; // of checks.
     if(false == detail::check_uniform("boost::math::cdf(const uniform_distribution<%1%>&, %1%)", lower, upper, &result, Policy()))
     {
       return result;
@@ -248,11 +255,11 @@ namespace boost{ namespace math
     }
     if (x < lower)
     {
-      return 0;
+      return 1;
     }
     if (x > upper)
     {
-      return 1;
+      return 0;
     }
     return (upper - x) / (upper - lower);
   } // RealType cdf(const complemented2_type<uniform_distribution<RealType, Policy>, RealType>& c)
@@ -263,21 +270,24 @@ namespace boost{ namespace math
     RealType lower = c.dist.lower();
     RealType upper = c.dist.upper();
     RealType q = c.param;
-    RealType result; // of checks.
+    RealType result = 0; // of checks.
     if(false == detail::check_uniform("boost::math::quantile(const uniform_distribution<%1%>&, %1%)", lower, upper, &result, Policy()))
     {
       return result;
     }
     if(false == detail::check_probability("boost::math::quantile(const uniform_distribution<%1%>&, %1%)", q, &result, Policy()))
-      if(q == 0)
-      {
-        return lower;
-      }
-      if(q == 1)
-      {
-        return upper;
-      }
-      return -q * (upper - lower) + upper;
+    {
+       return result;
+    }
+    if(q == 0)
+    {
+       return upper;
+    }
+    if(q == 1)
+    {
+       return lower;
+    }
+    return -q * (upper - lower) + upper;
   } // RealType quantile(const complemented2_type<uniform_distribution<RealType, Policy>, RealType>& c)
 
   template <class RealType, class Policy>
@@ -285,7 +295,7 @@ namespace boost{ namespace math
   {
     RealType lower = dist.lower();
     RealType upper = dist.upper();
-    RealType result;  // of checks.
+    RealType result = 0;  // of checks.
     if(false == detail::check_uniform("boost::math::mean(const uniform_distribution<%1%>&)", lower, upper, &result, Policy()))
     {
       return result;
@@ -298,7 +308,7 @@ namespace boost{ namespace math
   {
     RealType lower = dist.lower();
     RealType upper = dist.upper();
-    RealType result; // of checks.
+    RealType result = 0; // of checks.
     if(false == detail::check_uniform("boost::math::variance(const uniform_distribution<%1%>&)", lower, upper, &result, Policy()))
     {
       return result;
@@ -312,7 +322,7 @@ namespace boost{ namespace math
   {
     RealType lower = dist.lower();
     RealType upper = dist.upper();
-    RealType result; // of checks.
+    RealType result = 0; // of checks.
     if(false == detail::check_uniform("boost::math::mode(const uniform_distribution<%1%>&)", lower, upper, &result, Policy()))
     {
       return result;
@@ -326,7 +336,7 @@ namespace boost{ namespace math
   {
     RealType lower = dist.lower();
     RealType upper = dist.upper();
-    RealType result; // of checks.
+    RealType result = 0; // of checks.
     if(false == detail::check_uniform("boost::math::median(const uniform_distribution<%1%>&)", lower, upper, &result, Policy()))
     {
       return result;
@@ -338,7 +348,7 @@ namespace boost{ namespace math
   {
     RealType lower = dist.lower();
     RealType upper = dist.upper();
-    RealType result; // of checks.
+    RealType result = 0; // of checks.
     if(false == detail::check_uniform("boost::math::skewness(const uniform_distribution<%1%>&)",lower, upper, &result, Policy()))
     {
       return result;
@@ -351,7 +361,7 @@ namespace boost{ namespace math
   {
     RealType lower = dist.lower();
     RealType upper = dist.upper();
-    RealType result;  // of checks.
+    RealType result = 0;  // of checks.
     if(false == detail::check_uniform("boost::math::kurtosis_execess(const uniform_distribution<%1%>&)", lower, upper, &result, Policy()))
     {
       return result;
@@ -363,6 +373,13 @@ namespace boost{ namespace math
   inline RealType kurtosis(const uniform_distribution<RealType, Policy>& dist)
   {
     return kurtosis_excess(dist) + 3;
+  }
+
+  template <class RealType, class Policy>
+  inline RealType entropy(const uniform_distribution<RealType, Policy>& dist)
+  {
+    using std::log;
+    return log(dist.upper() - dist.lower());
   }
 
 } // namespace math

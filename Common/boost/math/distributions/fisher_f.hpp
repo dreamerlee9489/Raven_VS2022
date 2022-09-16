@@ -54,11 +54,16 @@ private:
 
 typedef fisher_f_distribution<double> fisher_f;
 
+#ifdef __cpp_deduction_guides
+template <class RealType>
+fisher_f_distribution(RealType,RealType)->fisher_f_distribution<typename boost::math::tools::promote_args<RealType>::type>;
+#endif
+
 template <class RealType, class Policy>
 inline const std::pair<RealType, RealType> range(const fisher_f_distribution<RealType, Policy>& /*dist*/)
 { // Range of permissible values for random variable x.
    using boost::math::tools::max_value;
-   return std::pair<RealType, RealType>(0, max_value<RealType>());
+   return std::pair<RealType, RealType>(static_cast<RealType>(0), max_value<RealType>());
 }
 
 template <class RealType, class Policy>
@@ -66,7 +71,7 @@ inline const std::pair<RealType, RealType> support(const fisher_f_distribution<R
 { // Range of supported values for random variable x.
    // This is range where cdf rises from 0 to 1, and outside it, the pdf is zero.
    using boost::math::tools::max_value;
-   return std::pair<RealType, RealType>(0,  max_value<RealType>());
+   return std::pair<RealType, RealType>(static_cast<RealType>(0),  max_value<RealType>());
 }
 
 template <class RealType, class Policy>
@@ -76,12 +81,12 @@ RealType pdf(const fisher_f_distribution<RealType, Policy>& dist, const RealType
    RealType df1 = dist.degrees_of_freedom1();
    RealType df2 = dist.degrees_of_freedom2();
    // Error check:
-   RealType error_result;
+   RealType error_result = 0;
    static const char* function = "boost::math::pdf(fisher_f_distribution<%1%> const&, %1%)";
-   if(false == detail::check_df(
+   if(false == (detail::check_df(
          function, df1, &error_result, Policy())
          && detail::check_df(
-         function, df2, &error_result, Policy()))
+         function, df2, &error_result, Policy())))
       return error_result;
 
    if((x < 0) || !(boost::math::isfinite)(x))
@@ -133,7 +138,7 @@ inline RealType cdf(const fisher_f_distribution<RealType, Policy>& dist, const R
    RealType df1 = dist.degrees_of_freedom1();
    RealType df2 = dist.degrees_of_freedom2();
    // Error check:
-   RealType error_result;
+   RealType error_result = 0;
    if(false == detail::check_df(
          function, df1, &error_result, Policy())
          && detail::check_df(
@@ -168,16 +173,18 @@ inline RealType quantile(const fisher_f_distribution<RealType, Policy>& dist, co
    RealType df1 = dist.degrees_of_freedom1();
    RealType df2 = dist.degrees_of_freedom2();
    // Error check:
-   RealType error_result;
-   if(false == detail::check_df(
+   RealType error_result = 0;
+   if(false == (detail::check_df(
             function, df1, &error_result, Policy())
          && detail::check_df(
             function, df2, &error_result, Policy())
          && detail::check_probability(
-            function, p, &error_result, Policy()))
+            function, p, &error_result, Policy())))
       return error_result;
 
-   RealType x, y;
+   // With optimizations turned on, gcc wrongly warns about y being used
+   // uninitialized unless we initialize it to something:
+   RealType x, y(0);
 
    x = boost::math::ibeta_inv(df1 / 2, df2 / 2, p, &y, Policy());
 
@@ -192,7 +199,7 @@ inline RealType cdf(const complemented2_type<fisher_f_distribution<RealType, Pol
    RealType df2 = c.dist.degrees_of_freedom2();
    RealType x = c.param;
    // Error check:
-   RealType error_result;
+   RealType error_result = 0;
    if(false == detail::check_df(
          function, df1, &error_result, Policy())
          && detail::check_df(
@@ -228,13 +235,13 @@ inline RealType quantile(const complemented2_type<fisher_f_distribution<RealType
    RealType df2 = c.dist.degrees_of_freedom2();
    RealType p = c.param;
    // Error check:
-   RealType error_result;
-   if(false == detail::check_df(
+   RealType error_result = 0;
+   if(false == (detail::check_df(
             function, df1, &error_result, Policy())
          && detail::check_df(
             function, df2, &error_result, Policy())
          && detail::check_probability(
-            function, p, &error_result, Policy()))
+            function, p, &error_result, Policy())))
       return error_result;
 
    RealType x, y;
@@ -251,7 +258,7 @@ inline RealType mean(const fisher_f_distribution<RealType, Policy>& dist)
    RealType df1 = dist.degrees_of_freedom1();
    RealType df2 = dist.degrees_of_freedom2();
    // Error check:
-   RealType error_result;
+   RealType error_result = 0;
    if(false == detail::check_df(
             function, df1, &error_result, Policy())
          && detail::check_df(
@@ -272,7 +279,7 @@ inline RealType variance(const fisher_f_distribution<RealType, Policy>& dist)
    RealType df1 = dist.degrees_of_freedom1();
    RealType df2 = dist.degrees_of_freedom2();
    // Error check:
-   RealType error_result;
+   RealType error_result = 0;
    if(false == detail::check_df(
             function, df1, &error_result, Policy())
          && detail::check_df(
@@ -293,7 +300,7 @@ inline RealType mode(const fisher_f_distribution<RealType, Policy>& dist)
    RealType df1 = dist.degrees_of_freedom1();
    RealType df2 = dist.degrees_of_freedom2();
    // Error check:
-   RealType error_result;
+   RealType error_result = 0;
    if(false == detail::check_df(
             function, df1, &error_result, Policy())
          && detail::check_df(
@@ -324,7 +331,7 @@ inline RealType skewness(const fisher_f_distribution<RealType, Policy>& dist)
    RealType df1 = dist.degrees_of_freedom1();
    RealType df2 = dist.degrees_of_freedom2();
    // Error check:
-   RealType error_result;
+   RealType error_result = 0;
    if(false == detail::check_df(
             function, df1, &error_result, Policy())
          && detail::check_df(
@@ -355,7 +362,7 @@ inline RealType kurtosis_excess(const fisher_f_distribution<RealType, Policy>& d
    RealType df1 = dist.degrees_of_freedom1();
    RealType df2 = dist.degrees_of_freedom2();
    // Error check:
-   RealType error_result;
+   RealType error_result = 0;
    if(false == detail::check_df(
             function, df1, &error_result, Policy())
          && detail::check_df(
@@ -364,7 +371,7 @@ inline RealType kurtosis_excess(const fisher_f_distribution<RealType, Policy>& d
    if(df2 <= 8)
    {
       return policies::raise_domain_error<RealType>(
-         function, "Second degree of freedom was %1% but must be > 8 in order for the distribution to have a kutosis.", df2, Policy());
+         function, "Second degree of freedom was %1% but must be > 8 in order for the distribution to have a kurtosis.", df2, Policy());
    }
    RealType df2_2 = df2 * df2;
    RealType df1_2 = df1 * df1;

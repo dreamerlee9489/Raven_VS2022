@@ -1,10 +1,10 @@
 // generator.hpp
-// Copyright (c) 2007-2008 Ben Hanson (http://www.benhanson.net/)
+// Copyright (c) 2007-2009 Ben Hanson (http://www.benhanson.net/)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file licence_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef BOOST_LEXER_GENERATOR_HPP
-#define BOOST_LEXER_GENERATOR_HPP
+#ifndef BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_GENERATOR_HPP
+#define BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_GENERATOR_HPP
 
 #include "char_traits.hpp"
 // memcmp()
@@ -12,9 +12,11 @@
 #include "partition/charset.hpp"
 #include "partition/equivset.hpp"
 #include <memory>
+#include <limits>
 #include "parser/tree/node.hpp"
 #include "parser/parser.hpp"
 #include "containers/ptr_list.hpp"
+#include <boost/move/unique_ptr.hpp>
 #include "rules.hpp"
 #include "state_machine.hpp"
 
@@ -26,30 +28,35 @@ template<typename CharT, typename Traits = char_traits<CharT> >
 class basic_generator
 {
 public:
-    typedef typename basic_state_machine<CharT>::size_t_vector size_t_vector;
+    typedef typename detail::internals::size_t_vector size_t_vector;
     typedef basic_rules<CharT> rules;
 
-    static void build (const rules &rules_, basic_state_machine<CharT> &state_machine_)
+    static void build (const rules &rules_,
+        basic_state_machine<CharT> &state_machine_)
     {
         std::size_t index_ = 0;
         std::size_t size_ = rules_.statemap ().size ();
         node_ptr_vector node_ptr_vector_;
+        detail::internals &internals_ = const_cast<detail::internals &>
+            (state_machine_.data ());
+        bool seen_BOL_assertion_ = false;
+        bool seen_EOL_assertion_ = false;
 
         state_machine_.clear ();
 
         for (; index_ < size_; ++index_)
         {
-            state_machine_._lookup->push_back (0);
-            state_machine_._lookup->back () = new size_t_vector;
-            state_machine_._dfa_alphabet.push_back (0);
-            state_machine_._dfa->push_back (0);
-            state_machine_._dfa->back () = new size_t_vector;
+            internals_._lookup->push_back (static_cast<size_t_vector *>(0));
+            internals_._lookup->back () = new size_t_vector;
+            internals_._dfa_alphabet.push_back (0);
+            internals_._dfa->push_back (static_cast<size_t_vector *>(0));
+            internals_._dfa->back () = new size_t_vector;
         }
 
-        for (index_ = 0, size_ = state_machine_._lookup->size ();
+        for (index_ = 0, size_ = internals_._lookup->size ();
             index_ < size_; ++index_)
         {
-            state_machine_._lookup[index_]->resize (sizeof (CharT) == 1 ?
+            internals_._lookup[index_]->resize (sizeof (CharT) == 1 ?
                 num_chars : num_wchar_ts, dead_state_index);
 
             if (!rules_.regexes ()[index_].empty ())
@@ -58,26 +65,41 @@ public:
                 index_set_vector set_mapping_;
                 // syntax tree
                 detail::node *root_ = build_tree (rules_, index_,
-                    node_ptr_vector_, state_machine_._lookup[index_],
-                    set_mapping_, state_machine_._dfa_alphabet[index_],
-                    state_machine_._seen_BOL_assertion,
-                    state_machine_._seen_EOL_assertion);
+                    node_ptr_vector_, internals_, set_mapping_);
 
                 build_dfa (root_, set_mapping_,
-                    state_machine_._dfa_alphabet[index_],
-                    *state_machine_._dfa[index_]);
+                    internals_._dfa_alphabet[index_],
+                    *internals_._dfa[index_]);
+
+                if (internals_._seen_BOL_assertion)
+                {
+                    seen_BOL_assertion_ = true;
+                }
+
+                if (internals_._seen_EOL_assertion)
+                {
+                    seen_EOL_assertion_ = true;
+                }
+
+                internals_._seen_BOL_assertion = false;
+                internals_._seen_EOL_assertion = false;
             }
         }
+
+        internals_._seen_BOL_assertion = seen_BOL_assertion_;
+        internals_._seen_EOL_assertion = seen_EOL_assertion_;
     }
 
     static void minimise (basic_state_machine<CharT> &state_machine_)
     {
-        const std::size_t machines_ = state_machine_._dfa->size ();
+        detail::internals &internals_ = const_cast<detail::internals &>
+            (state_machine_.data ());
+        const std::size_t machines_ = internals_._dfa->size ();
 
         for (std::size_t i_ = 0; i_ < machines_; ++i_)
         {
-            const std::size_t dfa_alphabet_ = state_machine_._dfa_alphabet[i_];
-            size_t_vector *dfa_ = state_machine_._dfa[i_];
+            const std::size_t dfa_alphabet_ = internals_._dfa_alphabet[i_];
+            size_t_vector *dfa_ = internals_._dfa[i_];
 
             if (dfa_alphabet_ != 0)
             {
@@ -95,10 +117,10 @@ public:
 protected:
     typedef detail::basic_charset<CharT> charset;
     typedef detail::ptr_list<charset> charset_list;
-    typedef std::auto_ptr<charset> charset_ptr;
+    typedef boost::movelib::unique_ptr<charset> charset_ptr;
     typedef detail::equivset equivset;
     typedef detail::ptr_list<equivset> equivset_list;
-    typedef std::auto_ptr<equivset> equivset_ptr;
+    typedef boost::movelib::unique_ptr<equivset> equivset_ptr;
     typedef typename charset::index_set index_set;
     typedef std::vector<index_set> index_set_vector;
     typedef detail::basic_parser<CharT> parser;
@@ -118,13 +140,14 @@ protected:
 
     static detail::node *build_tree (const rules &rules_,
         const std::size_t state_, node_ptr_vector &node_ptr_vector_,
-        size_t_vector *lookup_, index_set_vector &set_mapping_,
-        std::size_t &dfa_alphabet_, bool &seen_BOL_assertion_,
-        bool &seen_EOL_assertion_)
+        detail::internals &internals_, index_set_vector &set_mapping_)
     {
+        size_t_vector *lookup_ = internals_._lookup[state_];
         const typename rules::string_deque_deque &regexes_ =
             rules_.regexes ();
         const typename rules::id_vector_deque &ids_ = rules_.ids ();
+        const typename rules::id_vector_deque &unique_ids_ =
+            rules_.unique_ids ();
         const typename rules::id_vector_deque &states_ = rules_.states ();
         typename rules::string_deque::const_iterator regex_iter_ =
             regexes_[state_].begin ();
@@ -132,6 +155,8 @@ protected:
             regexes_[state_].end ();
         typename rules::id_vector::const_iterator ids_iter_ =
             ids_[state_].begin ();
+        typename rules::id_vector::const_iterator unique_ids_iter_ =
+            unique_ids_[state_].begin ();
         typename rules::id_vector::const_iterator states_iter_ =
             states_[state_].begin ();
         const typename rules::string &regex_ = *regex_iter_;
@@ -144,15 +169,17 @@ protected:
 
         build_macros (token_map_, macrodeque_, macromap_,
             rules_.flags (), rules_.locale (), node_ptr_vector_,
-            seen_BOL_assertion_, seen_EOL_assertion_);
+            internals_._seen_BOL_assertion, internals_._seen_EOL_assertion);
 
         detail::node *root_ = parser::parse (regex_.c_str (),
-            regex_.c_str () + regex_.size (), *ids_iter_, *states_iter_,
-            rules_.flags (), rules_.locale (), node_ptr_vector_, macromap_,
-            token_map_, seen_BOL_assertion_, seen_EOL_assertion_);
+            regex_.c_str () + regex_.size (), *ids_iter_, *unique_ids_iter_,
+            *states_iter_, rules_.flags (), rules_.locale (), node_ptr_vector_,
+            macromap_, token_map_, internals_._seen_BOL_assertion,
+            internals_._seen_EOL_assertion);
 
         ++regex_iter_;
         ++ids_iter_;
+        ++unique_ids_iter_;
         ++states_iter_;
         tree_vector_.push_back (root_);
 
@@ -160,20 +187,22 @@ protected:
         while (regex_iter_ != regex_iter_end_)
         {
             // re-declare var, otherwise we perform an assignment..!
-            const typename rules::string &regex_ = *regex_iter_;
+            const typename rules::string &regex2_ = *regex_iter_;
 
-            root_ = parser::parse (regex_.c_str (),
-                regex_.c_str () + regex_.size (), *ids_iter_,
-                *states_iter_, rules_.flags (), rules_.locale (),
-                node_ptr_vector_, macromap_, token_map_,
-                seen_BOL_assertion_, seen_EOL_assertion_);
+            root_ = parser::parse (regex2_.c_str (),
+                regex2_.c_str () + regex2_.size (), *ids_iter_,
+                *unique_ids_iter_, *states_iter_, rules_.flags (),
+                rules_.locale (), node_ptr_vector_, macromap_, token_map_,
+                internals_._seen_BOL_assertion,
+                internals_._seen_EOL_assertion);
             tree_vector_.push_back (root_);
             ++regex_iter_;
             ++ids_iter_;
+            ++unique_ids_iter_;
             ++states_iter_;
         }
 
-        if (seen_BOL_assertion_)
+        if (internals_._seen_BOL_assertion)
         {
             // Fixup BOLs
             typename detail::node::node_vector::iterator iter_ =
@@ -202,7 +231,7 @@ protected:
 
             for (; iter_ != end_; ++iter_)
             {
-                node_ptr_vector_->push_back (0);
+                node_ptr_vector_->push_back (static_cast<detail::selection_node *>(0));
                 node_ptr_vector_->back () = new detail::selection_node
                     (root_, *iter_);
                 root_ = node_ptr_vector_->back ();
@@ -237,7 +266,7 @@ protected:
             }
         }
 
-        dfa_alphabet_ = token_list_->size () + dfa_offset;
+        internals_._dfa_alphabet[state_] = token_list_->size () + dfa_offset;
         return root_;
     }
 
@@ -254,11 +283,12 @@ protected:
             const typename rules::string &name_ = iter_->first;
             const typename rules::string &regex_ = iter_->second;
             detail::node *node_ = parser::parse (regex_.c_str (),
-                regex_.c_str () + regex_.size (), 0, 0, flags_,
+                regex_.c_str () + regex_.size (), 0, 0, 0, flags_,
                 locale_, node_ptr_vector_, macromap_, token_map_,
                 seen_BOL_assertion_, seen_EOL_assertion_);
             macro_iter_pair map_iter_ = macromap_.
-                insert (macro_pair (name_, 0));
+                insert (macro_pair (name_, static_cast<const detail::node *>
+                (0)));
 
             map_iter_.first->second = node_;
         }
@@ -292,8 +322,9 @@ protected:
                 iter_ != end_; ++iter_)
             {
                 equivset *equivset_ = *iter_;
-                const std::size_t transition_ = closure (&equivset_->_followpos,
-                    seen_sets_, seen_vectors_, hash_vector_, dfa_alphabet_, dfa_);
+                const std::size_t transition_ = closure
+                    (&equivset_->_followpos, seen_sets_, seen_vectors_,
+                    hash_vector_, dfa_alphabet_, dfa_);
 
                 if (transition_ != npos)
                 {
@@ -307,16 +338,16 @@ protected:
                         equiv_end_ = equivset_->_index_vector.end ();
                         equiv_iter_ != equiv_end_; ++equiv_iter_)
                     {
-                        const std::size_t index_ = *equiv_iter_;
+                        const std::size_t equiv_index_ = *equiv_iter_;
 
-                        if (index_ == bol_token)
+                        if (equiv_index_ == bol_token)
                         {
                             if (ptr_[eol_index] == 0)
                             {
                                 ptr_[bol_index] = transition_;
                             }
                         }
-                        else if (index_ == eol_token)
+                        else if (equiv_index_ == eol_token)
                         {
                             if (ptr_[bol_index] == 0)
                             {
@@ -325,7 +356,7 @@ protected:
                         }
                         else
                         {
-                            ptr_[index_ + dfa_offset] = transition_;
+                            ptr_[equiv_index_ + dfa_offset] = transition_;
                         }
                     }
                 }
@@ -335,25 +366,27 @@ protected:
 
     static std::size_t closure (typename detail::node::node_vector *followpos_,
         node_set_vector &seen_sets_, node_vector_vector &seen_vectors_,
-        size_t_vector &hash_vector_, const std::size_t size_, size_t_vector &dfa_)
+        size_t_vector &hash_vector_, const std::size_t size_,
+        size_t_vector &dfa_)
     {
         bool end_state_ = false;
         std::size_t id_ = 0;
+        std::size_t unique_id_ = npos;
         std::size_t state_ = 0;
         std::size_t hash_ = 0;
 
         if (followpos_->empty ()) return npos;
 
         std::size_t index_ = 0;
-        std::auto_ptr<node_set> set_ptr_ (new node_set);
-        std::auto_ptr<node_vector> vector_ptr_ (new node_vector);
+        boost::movelib::unique_ptr<node_set> set_ptr_ (new node_set);
+        boost::movelib::unique_ptr<node_vector> vector_ptr_ (new node_vector);
 
         for (typename detail::node::node_vector::const_iterator iter_ =
             followpos_->begin (), end_ = followpos_->end ();
             iter_ != end_; ++iter_)
         {
-            closure_ex (*iter_, end_state_, id_, state_, set_ptr_.get (),
-                vector_ptr_.get (), hash_);
+            closure_ex (*iter_, end_state_, id_, unique_id_, state_,
+                set_ptr_.get (), vector_ptr_.get (), hash_);
         }
 
         bool found_ = false;
@@ -374,9 +407,9 @@ protected:
 
         if (!found_)
         {
-            seen_sets_->push_back (0);
+            seen_sets_->push_back (static_cast<node_set *>(0));
             seen_sets_->back () = set_ptr_.release ();
-            seen_vectors_->push_back (0);
+            seen_vectors_->push_back (static_cast<node_vector *>(0));
             seen_vectors_->back () = vector_ptr_.release ();
             hash_vector_.push_back (hash_);
             // State 0 is the jam state...
@@ -390,6 +423,7 @@ protected:
             {
                 dfa_[old_size_] |= end_state;
                 dfa_[old_size_ + id_index] = id_;
+                dfa_[old_size_ + unique_id_index] = unique_id_;
                 dfa_[old_size_ + state_index] = state_;
             }
         }
@@ -398,8 +432,8 @@ protected:
     }
 
     static void closure_ex (detail::node *node_, bool &end_state_,
-        std::size_t &id_, std::size_t &state_, node_set *set_ptr_,
-        node_vector *vector_ptr_, std::size_t &hash_)
+        std::size_t &id_, std::size_t &unique_id_, std::size_t &state_,
+        node_set *set_ptr_, node_vector *vector_ptr_, std::size_t &hash_)
     {
         const bool temp_end_state_ = node_->end_state ();
 
@@ -409,6 +443,7 @@ protected:
             {
                 end_state_ = true;
                 id_ = node_->id ();
+                unique_id_ = node_->unique_id ();
                 state_ = node_->lexer_state ();
             }
         }
@@ -433,7 +468,7 @@ protected:
             typename charset_list::list::iterator end_;
             charset_ptr overlap_ (new charset);
 
-            lhs_->push_back (0);
+            lhs_->push_back (static_cast<charset *>(0));
             lhs_->back () = rhs_->front ();
             rhs_->pop_front ();
 
@@ -460,32 +495,22 @@ protected:
                         delete *l_iter_;
                         *l_iter_ = overlap_.release ();
 
-                        // VC++ 6 Hack:
-                        charset_ptr temp_overlap_ (new charset);
-
-                        overlap_ = temp_overlap_;
+                        overlap_.reset (new charset);
                         ++iter_;
                     }
                     else if (r_->empty ())
                     {
-                        delete r_.release ();
-                        r_ = overlap_;
-
-                        // VC++ 6 Hack:
-                        charset_ptr temp_overlap_ (new charset);
-
-                        overlap_ = temp_overlap_;
+                        overlap_.swap (r_);
+                        overlap_.reset (new charset);
                         break;
                     }
                     else
                     {
-                        iter_ = lhs_->insert (++iter_, 0);
+                        iter_ = lhs_->insert (++iter_,
+                            static_cast<charset *>(0));
                         *iter_ = overlap_.release ();
 
-                        // VC++ 6 Hack:
-                        charset_ptr temp_overlap_ (new charset);
-
-                        overlap_ = temp_overlap_;
+                        overlap_.reset(new charset);
                         ++iter_;
                         end_ = lhs_->end ();
                     }
@@ -493,7 +518,7 @@ protected:
 
                 if (!r_->empty ())
                 {
-                    lhs_->push_back (0);
+                    lhs_->push_back (static_cast<charset *>(0));
                     lhs_->back () = r_.release ();
                 }
             }
@@ -510,7 +535,7 @@ protected:
 
         for (; iter_ != end_; ++iter_)
         {
-            list_->push_back (0);
+            list_->push_back (static_cast<charset *>(0));
             list_->back () = new charset (iter_->first, iter_->second);
         }
     }
@@ -526,7 +551,12 @@ protected:
 
         if (token_._negated)
         {
-            CharT curr_char_ = sizeof (CharT) == 1 ? -128 : 0;
+            // $$$ FIXME JDG July 2014 $$$
+            // this code is problematic on platforms where wchar_t is signed
+            // with min generating negative numbers. This crashes with BAD_ACCESS
+            // because of the vector index below:
+            //  ptr_[static_cast<typename Traits::index_type>(curr_char_)]
+            CharT curr_char_ = 0; // (std::numeric_limits<CharT>::min)();
             std::size_t i_ = 0;
 
             while (curr_ < chars_end_)
@@ -575,7 +605,7 @@ protected:
             typename equivset_list::list::iterator end_;
             equivset_ptr overlap_ (new equivset);
 
-            lhs_->push_back (0);
+            lhs_->push_back (static_cast<equivset *>(0));
             lhs_->back () = rhs_->front ();
             rhs_->pop_front ();
 
@@ -602,32 +632,22 @@ protected:
                         delete *l_iter_;
                         *l_iter_ = overlap_.release ();
 
-                        // VC++ 6 Hack:
-                        equivset_ptr temp_overlap_ (new equivset);
-
-                        overlap_ = temp_overlap_;
+                        overlap_.reset (new equivset);
                         ++iter_;
                     }
                     else if (r_->empty ())
                     {
-                        delete r_.release ();
-                        r_ = overlap_;
-
-                        // VC++ 6 Hack:
-                        equivset_ptr temp_overlap_ (new equivset);
-
-                        overlap_ = temp_overlap_;
+                        overlap_.swap (r_);
+                        overlap_.reset (new equivset);
                         break;
                     }
                     else
                     {
-                        iter_ = lhs_->insert (++iter_, 0);
+                        iter_ = lhs_->insert (++iter_,
+                            static_cast<equivset *>(0));
                         *iter_ = overlap_.release ();
 
-                        // VC++ 6 Hack:
-                        equivset_ptr temp_overlap_ (new equivset);
-
-                        overlap_ = temp_overlap_;
+                        overlap_.reset (new equivset);
                         ++iter_;
                         end_ = lhs_->end ();
                     }
@@ -635,7 +655,7 @@ protected:
 
                 if (!r_->empty ())
                 {
-                    lhs_->push_back (0);
+                    lhs_->push_back (static_cast<equivset *>(0));
                     lhs_->back () = r_.release ();
                 }
             }
@@ -660,7 +680,7 @@ protected:
 
                 if (token_ != null_token)
                 {
-                    list_->push_back (0);
+                    list_->push_back (static_cast<equivset *>(0));
 
                     if (token_ == bol_token || token_ == eol_token)
                     {
@@ -701,22 +721,26 @@ protected:
 
         if (!found_)
         {
-            node_ptr_vector_->push_back (0);
-            node_ptr_vector_->back () = new detail::leaf_node (bol_token, true);
+            node_ptr_vector_->push_back (static_cast<detail::leaf_node *>(0));
+            node_ptr_vector_->back () = new detail::leaf_node
+                (bol_token, true);
 
             detail::node *lhs_ = node_ptr_vector_->back ();
 
-            node_ptr_vector_->push_back (0);
-            node_ptr_vector_->back () = new detail::leaf_node (null_token, true);
+            node_ptr_vector_->push_back (static_cast<detail::leaf_node *>(0));
+            node_ptr_vector_->back () = new detail::leaf_node
+                (null_token, true);
 
             detail::node *rhs_ = node_ptr_vector_->back ();
 
-            node_ptr_vector_->push_back (0);
+            node_ptr_vector_->push_back
+                (static_cast<detail::selection_node *>(0));
             node_ptr_vector_->back () =
                 new detail::selection_node (lhs_, rhs_);
             lhs_ = node_ptr_vector_->back ();
 
-            node_ptr_vector_->push_back (0);
+            node_ptr_vector_->push_back
+                (static_cast<detail::sequence_node *>(0));
             node_ptr_vector_->back () =
                 new detail::sequence_node (lhs_, root_);
             root_ = node_ptr_vector_->back ();
@@ -793,6 +817,7 @@ protected:
 
                 new_ptr_[end_state_index] = ptr_[end_state_index];
                 new_ptr_[id_index] = ptr_[id_index];
+                new_ptr_[unique_id_index] = ptr_[unique_id_index];
                 new_ptr_[state_index] = ptr_[state_index];
                 new_ptr_[bol_index] = lookup_ptr_[ptr_[bol_index]];
                 new_ptr_[eol_index] = lookup_ptr_[ptr_[eol_index]];

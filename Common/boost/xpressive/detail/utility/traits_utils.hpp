@@ -9,7 +9,7 @@
 #define BOOST_XPRESSIVE_DETAIL_UTILITY_TRAITS_UTILS_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 # pragma warning(push)
 # pragma warning(disable : 4100) // unreferenced formal parameter
@@ -38,10 +38,10 @@ namespace boost { namespace xpressive { namespace detail
 
     template<typename ToChar, typename FromChar, typename Traits>
     inline ToChar
-    char_cast(FromChar from, Traits const &traits, typename disable_if<is_same<ToChar, FromChar> >::type * = 0)
+    char_cast(FromChar from, Traits const &tr, typename disable_if<is_same<ToChar, FromChar> >::type * = 0)
     {
         BOOST_MPL_ASSERT((is_same<FromChar, char>));
-        return traits.widen(from);
+        return tr.widen(from);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -51,8 +51,8 @@ namespace boost { namespace xpressive { namespace detail
     struct widen_fun
     {
         typedef typename Traits::char_type result_type;
-        explicit widen_fun(Traits const &traits)
-          : traits_(traits)
+        explicit widen_fun(Traits const &tr)
+          : traits_(tr)
         {}
 
         result_type operator()(char ch) const
@@ -77,9 +77,9 @@ namespace boost { namespace xpressive { namespace detail
         BOOST_MPL_ASSERT((is_same<FromChar, char>));
         typedef To const result_type;
         template<typename Traits>
-        result_type operator()(From const &from, Traits const &traits) const
+        result_type operator()(From const &from, Traits const &tr) const
         {
-            widen_fun<Traits> widen(traits);
+            widen_fun<Traits> widen(tr);
             To to(
                 boost::make_transform_iterator(detail::data_begin(from), widen)
               , boost::make_transform_iterator(detail::data_end(from), widen)
@@ -116,29 +116,29 @@ namespace boost { namespace xpressive { namespace detail
     //
     template<typename To, typename From, typename Traits>
     typename string_cast_<To, From>::result_type
-    string_cast(From const &from, Traits const &traits)
+    string_cast(From const &from, Traits const &tr)
     {
-        return string_cast_<To, From>()(from, traits);
+        return string_cast_<To, From>()(from, tr);
     }
 
     ///////////////////////////////////////////////////////////////////////////////
     // translate
     //
     template<typename Char, typename Traits>
-    inline Char translate(Char ch, Traits const &traits, mpl::false_) // case-sensitive
+    inline Char translate(Char ch, Traits const &tr, mpl::false_) // case-sensitive
     {
-        return traits.translate(ch);
+        return tr.translate(ch);
     }
 
     template<typename Char, typename Traits>
-    inline Char translate(Char ch, Traits const &traits, mpl::true_) // case-insensitive
+    inline Char translate(Char ch, Traits const &tr, mpl::true_) // case-insensitive
     {
-        return traits.translate_nocase(ch);
+        return tr.translate_nocase(ch);
     }
 
 }}} // namespace boost::xpressive::detail
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma warning(pop)
 #endif
 

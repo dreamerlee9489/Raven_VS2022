@@ -1,10 +1,10 @@
 // selection_node.hpp
-// Copyright (c) 2007-2008 Ben Hanson (http://www.benhanson.net/)
+// Copyright (c) 2007-2009 Ben Hanson (http://www.benhanson.net/)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file licence_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef BOOST_LEXER_SELECTION_NODE_HPP
-#define BOOST_LEXER_SELECTION_NODE_HPP
+#ifndef BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_PARSER_TREE_SELECTION_NODE_HPP
+#define BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_PARSER_TREE_SELECTION_NODE_HPP
 
 #include "node.hpp"
 
@@ -75,7 +75,7 @@ private:
 
             node *lhs_ = new_node_stack_.top ();
 
-            node_ptr_vector_->push_back (0);
+            node_ptr_vector_->push_back (static_cast<selection_node *>(0));
             node_ptr_vector_->back () = new selection_node (lhs_, rhs_);
             new_node_stack_.top () = node_ptr_vector_->back ();
         }

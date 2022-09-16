@@ -11,10 +11,16 @@
 #include <boost/spirit/home/classic/namespace.hpp>
 #include <boost/spirit/home/classic/core/parser.hpp>
 #include <boost/spirit/home/classic/core/composite/composite.hpp>
+#include <boost/core/ignore_unused.hpp>
 
 namespace boost { namespace spirit {
 
 BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
+
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
+#pragma warning(push)
+#pragma warning(disable:4512) //assignment operator could not be generated
+#endif
 
     ///////////////////////////////////////////////////////////////////////////
     //
@@ -102,7 +108,7 @@ BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
             typedef typename ScannerT::iterator_t iterator_t;
             typedef typename parser_result<self_t, ScannerT>::type result_t;
 
-            scan.at_end(); // allow skipper to take effect
+            ignore_unused(scan.at_end()); // allow skipper to take effect
             iterator_t save = scan.first;
             result_t hit = this->subject().parse(scan);
             if (hit)
@@ -119,6 +125,10 @@ BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
 
         ActionT actor;
     };
+
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
+#pragma warning(pop)
+#endif
 
 BOOST_SPIRIT_CLASSIC_NAMESPACE_END
 

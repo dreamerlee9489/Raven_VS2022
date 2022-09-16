@@ -9,7 +9,7 @@
 #define BOOST_XPRESSIVE_DETAIL_CORE_MATCHER_RANGE_MATCHER_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 # pragma warning(push)
 # pragma warning(disable : 4100) // unreferenced formal parameter
@@ -48,14 +48,14 @@ namespace boost { namespace xpressive { namespace detail
             this->not_ = !this->not_;
         }
 
-        bool in_range(Traits const &traits, char_type ch, mpl::false_) const // case-sensitive
+        bool in_range(Traits const &tr, char_type ch, mpl::false_) const // case-sensitive
         {
-            return traits.in_range(this->ch_min_, this->ch_max_, ch);
+            return tr.in_range(this->ch_min_, this->ch_max_, ch);
         }
 
-        bool in_range(Traits const &traits, char_type ch, mpl::true_) const // case-insensitive
+        bool in_range(Traits const &tr, char_type ch, mpl::true_) const // case-insensitive
         {
-            return traits.in_range_nocase(this->ch_min_, this->ch_max_, ch);
+            return tr.in_range_nocase(this->ch_min_, this->ch_max_, ch);
         }
 
         template<typename BidiIter, typename Next>
@@ -80,7 +80,7 @@ namespace boost { namespace xpressive { namespace detail
 
 }}}
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma warning(pop)
 #endif
 

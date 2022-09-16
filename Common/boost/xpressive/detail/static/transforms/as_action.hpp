@@ -12,7 +12,7 @@
 #define BOOST_XPRESSIVE_DETAIL_STATIC_TRANSFORMS_AS_ACTION_HPP_EAN_04_05_2007
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -113,7 +113,7 @@ namespace boost { namespace xpressive { namespace grammar_detail
     struct DeepCopy
       : or_<
             when< terminal<detail::attribute_placeholder<_> >,  as_read_attr>
-          , when< terminal<_>,                                  proto::_deep_copy(_)>
+          , when< terminal<_>,                                  proto::_deep_copy>
           , otherwise< nary_expr<_, vararg<DeepCopy> > >
         >
     {};

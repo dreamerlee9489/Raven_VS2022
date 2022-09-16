@@ -13,7 +13,7 @@
 
 #include <boost/algorithm/string/config.hpp>
 
-#include <boost/range/iterator_range.hpp>
+#include <boost/range/iterator_range_core.hpp>
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
 #include <boost/range/iterator.hpp>
@@ -43,7 +43,6 @@ namespace boost {
             The result is given as an \c iterator_range delimiting the match.
 
             \param Search A substring to be searched for.
-            \param Comp An element comparison predicate
             \return An instance of the \c first_finder object
         */
         template<typename RangeT>
@@ -56,7 +55,7 @@ namespace boost {
                 detail::first_finderF<
                     BOOST_STRING_TYPENAME 
                         range_const_iterator<RangeT>::type,
-                    is_equal>( as_literal(Search), is_equal() ) ;
+                        is_equal>( ::boost::as_literal(Search), is_equal() ) ;
         }
 
         //! "First" finder
@@ -74,7 +73,7 @@ namespace boost {
                 detail::first_finderF<
                     BOOST_STRING_TYPENAME 
                         range_const_iterator<RangeT>::type,
-                    PredicateT>( as_literal(Search), Comp );
+                    PredicateT>( ::boost::as_literal(Search), Comp );
         }
 
         //! "Last" finder
@@ -84,7 +83,6 @@ namespace boost {
             The result is given as an \c iterator_range delimiting the match.
 
             \param Search A substring to be searched for.
-            \param Comp An element comparison predicate
             \return An instance of the \c last_finder object
         */
         template<typename RangeT>
@@ -97,7 +95,7 @@ namespace boost {
                 detail::last_finderF<
                     BOOST_STRING_TYPENAME 
                         range_const_iterator<RangeT>::type,
-                    is_equal>( as_literal(Search), is_equal() );
+                    is_equal>( ::boost::as_literal(Search), is_equal() );
         }
         //! "Last" finder
         /*!
@@ -113,7 +111,7 @@ namespace boost {
                 detail::last_finderF<
                     BOOST_STRING_TYPENAME 
                         range_const_iterator<RangeT>::type,
-                    PredicateT>( as_literal(Search), Comp ) ;
+                    PredicateT>( ::boost::as_literal(Search), Comp ) ;
         }
 
         //! "Nth" finder
@@ -124,7 +122,6 @@ namespace boost {
 
             \param Search A substring to be searched for.
             \param Nth An index of the match to be find
-            \param Comp An element comparison predicate
             \return An instance of the \c nth_finder object
         */
         template<typename RangeT>
@@ -139,7 +136,7 @@ namespace boost {
                 detail::nth_finderF<
                     BOOST_STRING_TYPENAME 
                         range_const_iterator<RangeT>::type,
-                    is_equal>( as_literal(Search), Nth, is_equal() ) ;
+                    is_equal>( ::boost::as_literal(Search), Nth, is_equal() ) ;
         }
         //! "Nth" finder
         /*!
@@ -158,7 +155,7 @@ namespace boost {
                 detail::nth_finderF<
                     BOOST_STRING_TYPENAME 
                         range_const_iterator<RangeT>::type,
-                    PredicateT>( as_literal(Search), Nth, Comp );
+                    PredicateT>( ::boost::as_literal(Search), Nth, Comp );
         }
 
         //! "Head" finder
@@ -230,7 +227,6 @@ namespace boost {
 
             \param Begin Beginning of the range
             \param End End of the range
-            \param Range The range.
             \return An instance of the \c range_finger object
         */
         template< typename ForwardIteratorT >

@@ -1,16 +1,14 @@
 /*=============================================================================
-    Copyright (c) 2001-2006 Joel de Guzman
+    Copyright (c) 2005-2013 Joel de Guzman
 
-    Distributed under the Boost Software License, Version 1.0. (See accompanying 
+    Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
-#if !defined(FUSION_BEGIN_IMPL_05222005_1108)
-#define FUSION_BEGIN_IMPL_05222005_1108
+#if !defined(BOOST_FUSION_MAP_BEGIN_IMPL_02042013_0857)
+#define BOOST_FUSION_MAP_BEGIN_IMPL_02042013_0857
 
-#include <boost/fusion/sequence/intrinsic/begin.hpp>
-#include <boost/type_traits/is_const.hpp>
-#include <boost/mpl/eval_if.hpp>
-#include <boost/mpl/identity.hpp>
+#include <boost/fusion/support/config.hpp>
+#include <boost/fusion/container/map/map_iterator.hpp>
 
 namespace boost { namespace fusion
 {
@@ -18,35 +16,21 @@ namespace boost { namespace fusion
 
     namespace extension
     {
-        template <typename Tag>
+        template<typename T>
         struct begin_impl;
 
-        template <>
+        template<>
         struct begin_impl<map_tag>
         {
-            template <typename Sequence>
-            struct apply 
+            template<typename Sequence>
+            struct apply
             {
-                typedef typename 
-                    result_of::begin<typename Sequence::storage_type>::type
-                iterator_type;
+                typedef map_iterator<Sequence, 0> type;
 
-                typedef typename 
-                    result_of::begin<typename Sequence::storage_type const>::type
-                const_iterator_type;
-
-                typedef typename 
-                    mpl::eval_if<
-                        is_const<Sequence>
-                      , mpl::identity<const_iterator_type>
-                      , mpl::identity<iterator_type>
-                    >::type
-                type;
-    
-                static type
-                call(Sequence& m)
+                BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
+                static type call(Sequence& seq)
                 {
-                    return fusion::begin(m.get_data());
+                    return type(seq);
                 }
             };
         };

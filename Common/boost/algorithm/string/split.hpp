@@ -61,13 +61,17 @@ namespace boost {
         template< typename SequenceSequenceT, typename Range1T, typename Range2T >
         inline SequenceSequenceT& find_all(
             SequenceSequenceT& Result,
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+            Range1T&& Input,
+#else
             Range1T& Input,
+#endif
             const Range2T& Search)
         {
-            return iter_find(
+            return ::boost::algorithm::iter_find(
                 Result,
                 Input,
-                first_finder(Search) );        
+                ::boost::algorithm::first_finder(Search) );        
         }
 
         //! Find all algorithm ( case insensitive ) 
@@ -96,14 +100,18 @@ namespace boost {
         template< typename SequenceSequenceT, typename Range1T, typename Range2T >
         inline SequenceSequenceT& ifind_all(
             SequenceSequenceT& Result,
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+            Range1T&& Input,
+#else
             Range1T& Input,
+#endif
             const Range2T& Search,
             const std::locale& Loc=std::locale() )
         {
-            return iter_find(
+            return ::boost::algorithm::iter_find(
                 Result,
                 Input,
-                first_finder(Search, is_iequal(Loc) ) );        
+                ::boost::algorithm::first_finder(Search, is_iequal(Loc) ) );        
         }
 
 
@@ -139,14 +147,18 @@ namespace boost {
         template< typename SequenceSequenceT, typename RangeT, typename PredicateT >
         inline SequenceSequenceT& split(
             SequenceSequenceT& Result,
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+            RangeT&& Input,
+#else
             RangeT& Input,
+#endif
             PredicateT Pred,
             token_compress_mode_type eCompress=token_compress_off )
         {
-            return iter_split(
+            return ::boost::algorithm::iter_split(
                 Result,
                 Input,
-                token_finder( Pred, eCompress ) );         
+                ::boost::algorithm::token_finder( Pred, eCompress ) );         
         }
 
     } // namespace algorithm

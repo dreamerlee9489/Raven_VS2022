@@ -8,7 +8,7 @@
 #ifndef BOOST_IOSTREAMS_DETAIL_DIRECT_ADAPTER_HPP_INCLUDED
 #define BOOST_IOSTREAMS_DETAIL_DIRECT_ADAPTER_HPP_INCLUDED
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif              
 
@@ -30,6 +30,7 @@
 #include <boost/preprocessor/repetition/enum_binary_params.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/throw_exception.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 
 // Must come last.
@@ -57,6 +58,7 @@ protected:
     explicit direct_adapter_base(const Direct& d);
     typedef is_convertible<category, two_sequence> is_double;
     struct pointers {
+        pointers() : beg(0), ptr(0), end(0) { }
         char_type *beg, *ptr, *end;
     };
     void init_input(mpl::true_);
@@ -209,7 +211,7 @@ inline std::streamsize direct_adapter<Direct>::write
     using namespace std;
     pointers& put = ptrs_.second();
     if (n > static_cast<std::streamsize>(put.end - put.ptr))
-        throw write_area_exhausted();
+        boost::throw_exception(write_area_exhausted());
     std::copy(s, s + n, put.ptr);
     put.ptr += n;
     return n;
@@ -224,7 +226,7 @@ inline std::streampos direct_adapter<Direct>::seek
     pointers& get = ptrs_.first();
     pointers& put = ptrs_.second();
     if (way == BOOST_IOS::cur && get.ptr != put.ptr)
-       throw bad_seek();
+       boost::throw_exception(bad_seek());
     ptrdiff_t next = 0;
     if ((which & BOOST_IOS::in) || !is_double::value) {
         if (way == BOOST_IOS::beg)
@@ -236,7 +238,7 @@ inline std::streampos direct_adapter<Direct>::seek
         if (next >= 0 && next <= get.end - get.beg)
             get.ptr = get.beg + next;
         else
-            throw bad_seek();
+            boost::throw_exception(bad_seek());
     }
     if ((which & BOOST_IOS::out) && is_double::value) {
         if (way == BOOST_IOS::beg)
@@ -248,7 +250,7 @@ inline std::streampos direct_adapter<Direct>::seek
         if (next >= 0 && next <= put.end - put.beg)
             put.ptr = put.beg + next;
         else
-            throw bad_seek();
+            boost::throw_exception(bad_seek());
     }
     return offset_to_position(next);
 }

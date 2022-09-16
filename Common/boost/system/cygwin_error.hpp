@@ -7,8 +7,15 @@
 
 //  See library home page at http://www.boost.org/libs/system
 
-#ifndef BOOST_CYGWIN_ERROR_HPP
-#define BOOST_CYGWIN_ERROR_HPP
+#ifndef BOOST_SYSTEM_CYGWIN_ERROR_HPP
+#define BOOST_SYSTEM_CYGWIN_ERROR_HPP
+
+#include <boost/config/pragma_message.hpp>
+
+#if !defined(BOOST_ALLOW_DEPRECATED_HEADERS)
+  BOOST_PRAGMA_MESSAGE("This header is deprecated and is slated for removal."
+  " If you want it retained, please open an issue in github.com/boostorg/system.")
+#endif
 
 //  This header is effectively empty for compiles on operating systems where
 //  it is not applicable.
@@ -23,7 +30,7 @@ namespace boost
   {
     //  To construct an error_code after a API error:
     //
-    //      error_code( errno, system_category )
+    //      error_code( errno, system_category() )
 
     //  User code should use the portable "posix" enums for POSIX errors; this
     //  allows such code to be portable to non-POSIX systems. For the non-POSIX
@@ -46,11 +53,11 @@ namespace boost
     namespace cygwin_error
     {
       inline error_code make_error_code( cygwin_errno e )
-        { return error_code( e, get_system_category() ); }
+        { return error_code( e, system_category() ); }
     }
   }
 }
 
 #endif  // __CYGWIN__
 
-#endif  // BOOST_CYGWIN_ERROR_HPP
+#endif  // BOOST_SYSTEM_CYGWIN_ERROR_HPP

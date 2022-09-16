@@ -12,7 +12,7 @@
 #ifndef BOOST_BIMAP_DETAIL_SET_VIEW_BASE_HPP
 #define BOOST_BIMAP_DETAIL_SET_VIEW_BASE_HPP
 
-#if defined(_MSC_VER) && (_MSC_VER>=1200)
+#if defined(_MSC_VER)
 #pragma once
 #endif
 
@@ -25,6 +25,7 @@
 #include <boost/bimap/relation/support/get_pair_functor.hpp>
 #include <boost/bimap/relation/detail/to_mutable_relation_functor.hpp>
 #include <boost/bimap/relation/mutant_relation.hpp>
+#include <boost/bimap/container_adaptor/support/iterator_facade_converters.hpp>
 
 namespace boost {
 namespace bimaps {
@@ -198,7 +199,7 @@ class set_view_base
     {
         return derived().base().replace(
             derived().template functor<iterator_to_base_>()(position),
-            value_type_(l,position->right)
+            ::boost::bimaps::relation::detail::copy_with_left_replaced(*position,l)
         );
     }
 
@@ -208,7 +209,7 @@ class set_view_base
     {
         return derived().base().replace(
             derived().template functor<iterator_to_base_>()(position),
-            value_type_(position->left,r)
+            ::boost::bimaps::relation::detail::copy_with_right_replaced(*position,r)
         );
     }
 

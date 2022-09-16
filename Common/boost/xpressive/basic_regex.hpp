@@ -11,7 +11,7 @@
 #define BOOST_XPRESSIVE_BASIC_REGEX_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -21,6 +21,7 @@
 #include <boost/xpressive/regex_constants.hpp>
 #include <boost/xpressive/detail/detail_fwd.hpp>
 #include <boost/xpressive/detail/core/regex_impl.hpp>
+#include <boost/xpressive/detail/core/regex_domain.hpp>
 
 // Doxygen can't handle proto :-(
 #ifndef BOOST_XPRESSIVE_DOXYGEN_INVOKED
@@ -51,13 +52,14 @@ namespace detail
 template<typename BidiIter>
 struct basic_regex
   : proto::extends<
-        typename proto::terminal<detail::tracking_ptr<detail::regex_impl<BidiIter> > >::type
+        proto::expr<proto::tag::terminal, proto::term<detail::tracking_ptr<detail::regex_impl<BidiIter> > >, 0>
       , basic_regex<BidiIter>
+      , detail::regex_domain
     >
 {
 private:
-    typedef typename proto::terminal<detail::tracking_ptr<detail::regex_impl<BidiIter> > >::type pimpl_type;
-    typedef proto::extends<pimpl_type, basic_regex<BidiIter> > base_type;
+    typedef proto::expr<proto::tag::terminal, proto::term<detail::tracking_ptr<detail::regex_impl<BidiIter> > >, 0> pimpl_type;
+    typedef proto::extends<pimpl_type, basic_regex<BidiIter>, detail::regex_domain> base_type;
 
 public:
     typedef BidiIter iterator_type;
@@ -256,9 +258,6 @@ private:
     void compile_(Expr const &, mpl::false_)
     {
     }
-
-    /// INTERNAL ONLY
-    void dump_(std::ostream &sout) const;
 };
 
 #ifndef BOOST_NO_INCLASS_MEMBER_INITIALIZATION

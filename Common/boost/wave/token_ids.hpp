@@ -1,19 +1,20 @@
 /*=============================================================================
     Boost.Wave: A Standard compliant C++ preprocessor library
-    The definition of a default set of token identifiers and related 
+    The definition of a default set of token identifiers and related
     functions.
-    
+
     http://www.boost.org/
 
-    Copyright (c) 2001-2009 Hartmut Kaiser. Distributed under the Boost
+    Copyright (c) 2001-2012 Hartmut Kaiser. Distributed under the Boost
     Software License, Version 1.0. (See accompanying file
     LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
 
-#if !defined(TOKEN_IDS_HPP_414E9A58_F079_4789_8AFF_513815CE475B_INCLUDED)
-#define TOKEN_IDS_HPP_414E9A58_F079_4789_8AFF_513815CE475B_INCLUDED
+#if !defined(BOOST_TOKEN_IDS_HPP_414E9A58_F079_4789_8AFF_513815CE475B_INCLUDED)
+#define BOOST_TOKEN_IDS_HPP_414E9A58_F079_4789_8AFF_513815CE475B_INCLUDED
 
 #include <string>
+#include <cstdint>
 
 #include <boost/wave/wave_config.hpp>
 
@@ -27,7 +28,7 @@
 #if !defined(BOOST_WAVE_TOKEN_IDS_DEFINED)
 #define BOOST_WAVE_TOKEN_IDS_DEFINED
 
-#if (defined (__FreeBSD__) || defined (__DragonFly__)) && defined (T_DIVIDE) 
+#if (defined (__FreeBSD__) || defined (__DragonFly__) || defined (__OpenBSD__)) && defined (T_DIVIDE)
 #undef T_DIVIDE
 #endif
 
@@ -36,47 +37,49 @@ namespace boost {
 namespace wave {
 
 ///////////////////////////////////////////////////////////////////////////////
-//  assemble tokenid's
+//  assemble tokenids
 #define TOKEN_FROM_ID(id, cat)   ((id) | (cat))
 #define ID_FROM_TOKEN(tok)       ((tok) & ~TokenTypeMask)
 #define BASEID_FROM_TOKEN(tok)   ((tok) & ~ExtTokenTypeMask)
 
 ///////////////////////////////////////////////////////////////////////////////
-//  the token_category helps to classify the different token types 
-enum token_category {
-    IdentifierTokenType         = 0x10000000,
-    ParameterTokenType          = 0x11000000,
-    ExtParameterTokenType       = 0x11100000,
-    KeywordTokenType            = 0x20000000,
-    OperatorTokenType           = 0x30000000,
-    LiteralTokenType            = 0x40000000,
-    IntegerLiteralTokenType     = 0x41000000,
-    FloatingLiteralTokenType    = 0x42000000,
-    StringLiteralTokenType      = 0x43000000,
-    CharacterLiteralTokenType   = 0x44000000,
-    BoolLiteralTokenType        = 0x45000000,
-    PPTokenType                 = 0x50000000,
-    PPConditionalTokenType      = 0x50800000,
+//  the token_category helps to classify the different token types
+enum token_category : std::uint32_t {
+    IdentifierTokenType         = 0x08040000,
+    ParameterTokenType          = 0x08840000,
+    ExtParameterTokenType       = 0x088C0000,
+    OptParameterTokenType       = 0x08940000,
+    KeywordTokenType            = 0x10040000,
+    OperatorTokenType           = 0x18040000,
+    LiteralTokenType            = 0x20040000,
+    IntegerLiteralTokenType     = 0x20840000,
+    FloatingLiteralTokenType    = 0x21040000,
+    StringLiteralTokenType      = 0x21840000,
+    CharacterLiteralTokenType   = 0x22040000,
+    BoolLiteralTokenType        = 0x22840000,
+    PPTokenType                 = 0x28040000,
+    PPConditionalTokenType      = 0x28440000,
 
-    UnknownTokenType            = 0xA0000000,
-    EOLTokenType                = 0xB0000000,
-    EOFTokenType                = 0xC0000000,
-    WhiteSpaceTokenType         = 0xD0000000,
-    InternalTokenType           = 0xE0000000,
-    
-    TokenTypeMask               = 0xFF000000,
-    AltTokenType                = 0x00100000,
-    TriGraphTokenType           = 0x00200000,
-    AltExtTokenType             = 0x00500000,   // and, bit_and etc.
-    ExtTokenTypeMask            = 0xFFF00000,
-    ExtTokenOnlyMask            = 0x00F00000,
-    TokenValueMask              = 0x000FFFFF,
-    MainTokenMask               = 0xFF0FFFFF    // TokenTypeMask|TokenValueMask
+    UnknownTokenType            = 0x50000000,
+    EOLTokenType                = 0x58000000,
+    EOFTokenType                = 0x60000000,
+    WhiteSpaceTokenType         = 0x68000000,
+    InternalTokenType           = 0x70040000,
+
+    TokenTypeMask               = 0x7F800000,
+    AltTokenType                = 0x00080000,
+    TriGraphTokenType           = 0x00100000,
+    AltExtTokenType             = 0x00280000,   // and, bit_and etc.
+    PPTokenFlag                 = 0x00040000,   // these are 'real' pp-tokens
+    ExtTokenTypeMask            = 0x7FF80000,
+    ExtTokenOnlyMask            = 0x00780000,
+    TokenValueMask              = 0x0007FFFF,
+    MainTokenMask               = 0x7F87FFFF    // TokenTypeMask|TokenValueMask
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 //  the token_id assigns unique numbers to the different C++ lexemes
-enum token_id {
+enum token_id : std::uint32_t {
     T_UNKNOWN      = 0,
     T_FIRST_TOKEN  = 256,
     T_AND          = TOKEN_FROM_ID(T_FIRST_TOKEN, OperatorTokenType),
@@ -262,7 +265,7 @@ enum token_id {
     T_EOF          = TOKEN_FROM_ID(401, EOFTokenType),      // end of file reached
     T_EOI          = TOKEN_FROM_ID(402, EOFTokenType),      // end of input reached
     T_PP_NUMBER    = TOKEN_FROM_ID(403, InternalTokenType),
-    
+
 // MS extensions
     T_MSEXT_INT8   = TOKEN_FROM_ID(404, KeywordTokenType),
     T_MSEXT_INT16  = TOKEN_FROM_ID(405, KeywordTokenType),
@@ -286,17 +289,66 @@ enum token_id {
 // import is needed to be a keyword for the C++ module Standards proposal
     T_IMPORT       = TOKEN_FROM_ID(421, KeywordTokenType),
 
+// C++11 keywords
+    T_ALIGNAS      = TOKEN_FROM_ID(422, KeywordTokenType),
+    T_ALIGNOF      = TOKEN_FROM_ID(423, KeywordTokenType),
+    T_CHAR16_T     = TOKEN_FROM_ID(424, KeywordTokenType),
+    T_CHAR32_T     = TOKEN_FROM_ID(425, KeywordTokenType),
+    T_CONSTEXPR    = TOKEN_FROM_ID(426, KeywordTokenType),
+    T_DECLTYPE     = TOKEN_FROM_ID(427, KeywordTokenType),
+    T_NOEXCEPT     = TOKEN_FROM_ID(428, KeywordTokenType),
+    T_NULLPTR      = TOKEN_FROM_ID(429, KeywordTokenType),
+    T_STATICASSERT = TOKEN_FROM_ID(430, KeywordTokenType),
+    T_THREADLOCAL  = TOKEN_FROM_ID(431, KeywordTokenType),
+    T_RAWSTRINGLIT = TOKEN_FROM_ID(432, StringLiteralTokenType),
+
+// C++20 keywords
+    T_CHAR8_T      = TOKEN_FROM_ID(433, KeywordTokenType),
+    T_CONCEPT      = TOKEN_FROM_ID(434, KeywordTokenType),
+    T_CONSTEVAL    = TOKEN_FROM_ID(435, KeywordTokenType),
+    T_CONSTINIT    = TOKEN_FROM_ID(436, KeywordTokenType),
+    T_CO_AWAIT     = TOKEN_FROM_ID(437, KeywordTokenType),
+    T_CO_RETURN    = TOKEN_FROM_ID(438, KeywordTokenType),
+    T_CO_YIELD     = TOKEN_FROM_ID(439, KeywordTokenType),
+    T_REQUIRES     = TOKEN_FROM_ID(440, KeywordTokenType),
+
+// C++20 operators
+    T_SPACESHIP    = TOKEN_FROM_ID(441, OperatorTokenType),
+
     T_LAST_TOKEN_ID,
-    T_LAST_TOKEN = ID_FROM_TOKEN(T_LAST_TOKEN_ID),
-    
-// pseudo tokens to help streamlining macro replacement, these should not 
+    T_LAST_TOKEN = ID_FROM_TOKEN(T_LAST_TOKEN_ID & ~PPTokenFlag),
+
+    T_UNKNOWN_UNIVERSALCHAR = TOKEN_FROM_ID('\\', UnknownTokenType),
+
+// pseudo tokens to help streamlining macro replacement, these should not
 // returned from the lexer nor should these be returned from the pp-iterator
     T_NONREPLACABLE_IDENTIFIER = TOKEN_FROM_ID(T_LAST_TOKEN+1, IdentifierTokenType),
     T_PLACEHOLDER = TOKEN_FROM_ID(T_LAST_TOKEN+2, WhiteSpaceTokenType),
     T_PLACEMARKER = TOKEN_FROM_ID(T_LAST_TOKEN+3, InternalTokenType),
     T_PARAMETERBASE = TOKEN_FROM_ID(T_LAST_TOKEN+4, ParameterTokenType),
-    T_EXTPARAMETERBASE = TOKEN_FROM_ID(T_LAST_TOKEN+4, ExtParameterTokenType)
+    T_EXTPARAMETERBASE = TOKEN_FROM_ID(T_LAST_TOKEN+4, ExtParameterTokenType),
+    T_OPTPARAMETERBASE = TOKEN_FROM_ID(T_LAST_TOKEN+4, OptParameterTokenType)
 };
+
+///////////////////////////////////////////////////////////////////////////////
+//  token_category and token_id may be used together
+constexpr token_id operator&(token_id a, token_category b)
+{
+    return static_cast<token_id>(
+        static_cast<std::uint32_t>(a) & static_cast<std::uint32_t>(b));
+}
+
+constexpr token_id operator|(token_id a, token_category b)
+{
+    return static_cast<token_id>(
+        static_cast<std::uint32_t>(a) | static_cast<std::uint32_t>(b));
+}
+
+constexpr bool operator==(token_category a, token_id b)
+{
+    return static_cast<std::uint32_t>(a) == static_cast<std::uint32_t>(b);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //  redefine the TOKEN_FROM_ID macro to be more type safe
@@ -304,11 +356,15 @@ enum token_id {
 #define TOKEN_FROM_ID(id, cat)   boost::wave::token_id((id) | (cat))
 
 #undef ID_FROM_TOKEN
-#define ID_FROM_TOKEN(tok)       ((tok) & ~boost::wave::TokenTypeMask)
+#define ID_FROM_TOKEN(tok)                                                    \
+    boost::wave::token_id((tok) &                                             \
+        ~(boost::wave::TokenTypeMask|boost::wave::PPTokenFlag))               \
+    /**/
 
 #undef BASEID_FROM_TOKEN
 #define BASEID_FROM_TOKEN(tok)                                                \
-    boost::wave::token_id(((tok) & ~boost::wave::ExtTokenTypeMask))           \
+    boost::wave::token_id((tok) &                                             \
+         ~(boost::wave::ExtTokenTypeMask|boost::wave::PPTokenFlag))           \
     /**/
 #define BASE_TOKEN(tok)                                                       \
     boost::wave::token_id((tok) & boost::wave::MainTokenMask)                 \
@@ -316,20 +372,33 @@ enum token_id {
 #define CATEGORY_FROM_TOKEN(tok) ((tok) & boost::wave::TokenTypeMask)
 #define EXTCATEGORY_FROM_TOKEN(tok) ((tok) & boost::wave::ExtTokenTypeMask)
 #define IS_CATEGORY(tok, cat)                                                 \
-    ((CATEGORY_FROM_TOKEN(tok) == (cat)) ? true : false)                      \
+    ((CATEGORY_FROM_TOKEN(tok) == CATEGORY_FROM_TOKEN(cat)) ? true : false)   \
     /**/
 #define IS_EXTCATEGORY(tok, cat)                                              \
-    ((EXTCATEGORY_FROM_TOKEN(tok) == (cat)) ? true : false)                   \
+    ((EXTCATEGORY_FROM_TOKEN(tok) == EXTCATEGORY_FROM_TOKEN(cat)) ? true : false) \
     /**/
 
 ///////////////////////////////////////////////////////////////////////////////
+// verify whether the given token(-id) represents a valid pp_token
+inline bool is_pp_token(boost::wave::token_id id)
+{
+    return (id & boost::wave::PPTokenFlag) ? true : false;
+}
+
+template <typename TokenT>
+inline bool is_pp_token(TokenT const& tok)
+{
+    return is_pp_token(boost::wave::token_id(tok));
+}
+
+///////////////////////////////////////////////////////////////////////////////
 //  return a token name
-BOOST_WAVE_DECL 
+BOOST_WAVE_DECL
 BOOST_WAVE_STRINGTYPE get_token_name(token_id tokid);
 
 ///////////////////////////////////////////////////////////////////////////////
 //  return a token name
-BOOST_WAVE_DECL 
+BOOST_WAVE_DECL
 char const *get_token_value(token_id tokid);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -343,5 +412,5 @@ char const *get_token_value(token_id tokid);
 #include BOOST_ABI_SUFFIX
 #endif
 
-#endif // !defined(TOKEN_IDS_HPP_414E9A58_F079_4789_8AFF_513815CE475B_INCLUDED)
+#endif // !defined(BOOST_TOKEN_IDS_HPP_414E9A58_F079_4789_8AFF_513815CE475B_INCLUDED)
 

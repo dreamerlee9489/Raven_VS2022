@@ -9,7 +9,12 @@
 #if !defined(BOOST_FUSION_SUPPORT_DEDUCE_HPP_INCLUDED)
 #define BOOST_FUSION_SUPPORT_DEDUCE_HPP_INCLUDED
 
+#include <boost/fusion/support/config.hpp>
 #include <boost/ref.hpp>
+
+#ifndef BOOST_NO_CXX11_HDR_FUNCTIONAL
+#include <functional>
+#endif
 
 namespace boost { namespace fusion { namespace traits
 {
@@ -85,7 +90,34 @@ namespace boost { namespace fusion { namespace traits
         typedef T& type;
     };
 
+    // Also unwrap C++11 std::ref if available (referencee cv is deduced)
+#ifndef BOOST_NO_CXX11_HDR_FUNCTIONAL
+    template <typename T>
+    struct deduce<std::reference_wrapper<T> &>
+    {
+        typedef T& type;
+    };
+
+    template <typename T>
+    struct deduce<std::reference_wrapper<T> const &>
+    {
+        typedef T& type;
+    };
+#endif
+
     // Keep references on arrays, even if const
+
+    template <typename T, int N>
+    struct deduce<T(&)[N]>
+    {
+        typedef T(&type)[N];
+    };
+
+    template <typename T, int N>
+    struct deduce<volatile T(&)[N]>
+    {
+        typedef volatile T(&type)[N]; 
+    };
 
     template <typename T, int N>
     struct deduce<const T(&)[N]>

@@ -11,29 +11,30 @@
 #ifndef BOOST_UNITS_OPERATORS_HPP 
 #define BOOST_UNITS_OPERATORS_HPP
 
+
+///
+/// \file
+/// \brief Compile time operators and typeof helper classes.
+/// \details
+///   These operators declare the compile-time operators needed to support dimensional
+///   analysis algebra.  They require the use of Boost.Typeof, emulation or native.
+///   Typeof helper classes define result type for heterogeneous operators on value types.
+///   These must be defined through specialization for powers and roots.
+///
+
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
 
 #include <boost/units/config.hpp>
 
-/// \file 
-/// \brief Compile time operators and typeof helper classes.
-///
-/// \detailed 
-/// These operators declare the compile-time operators needed to support dimensional
-/// analysis algebra.  They require the use of Boost.Typeof.
-/// Typeof helper classes define result type for heterogeneous operators on value types. 
-/// These must be defined through specialization for powers and roots.
-
 namespace boost {
-
 namespace units {
 
 #if BOOST_UNITS_HAS_TYPEOF
 
 #ifndef BOOST_UNITS_DOXYGEN
 
-// to avoid need for default constructor and eliminate divide by zero errors
+// to avoid need for default constructor and eliminate divide by zero errors.
 namespace typeof_ {
 
 /// INTERNAL ONLY
@@ -134,7 +135,7 @@ struct power_typeof_helper
     /// specifies the result type
     typedef detail::unspecified type;
     /// Carries out the runtime calculation.
-    static type value(const BaseType& base);
+    static BOOST_CONSTEXPR type value(const BaseType& base);
 };
 
 /// A helper used by @c root to take a root
@@ -151,7 +152,7 @@ struct root_typeof_helper
     /// specifies the result type
     typedef detail::unspecified type;
     /// Carries out the runtime calculation.
-    static type value(const Radicand& base);
+    static BOOST_CONSTEXPR type value(const Radicand& base);
 };
 
 #endif

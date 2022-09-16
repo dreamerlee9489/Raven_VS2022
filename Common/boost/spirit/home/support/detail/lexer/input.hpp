@@ -1,37 +1,34 @@
 // input.hpp
-// Copyright (c) 2008 Ben Hanson (http://www.benhanson.net/)
+// Copyright (c) 2008-2009 Ben Hanson (http://www.benhanson.net/)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file licence_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef BOOST_LEXER_INPUT
-#define BOOST_LEXER_INPUT
+#ifndef BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_INPUT_HPP
+#define BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_INPUT_HPP
 
 #include "char_traits.hpp"
-#include <iterator>
 #include "size_t.hpp"
 #include "state_machine.hpp"
+#include <iterator> // for std::iterator_traits
 
 namespace boost
 {
 namespace lexer
 {
 template<typename FwdIter, typename Traits =
-    char_traits<typename boost::detail::iterator_traits<FwdIter>::value_type> >
+    char_traits<typename std::iterator_traits<FwdIter>::value_type> >
 class basic_input
 {
 public:
     class iterator
     {
     public:
-#if defined _MSC_VER && _MSC_VER <= 1200
-        friend basic_input;
-#else
         friend class basic_input;
-#endif
 
         struct data
         {
             std::size_t id;
+            std::size_t unique_id;
             FwdIter start;
             FwdIter end;
             bool bol;
@@ -40,6 +37,7 @@ public:
             // Construct in end() state.
             data () :
                 id (0),
+                unique_id (npos),
                 bol (false),
                 state (npos)
             {
@@ -47,8 +45,9 @@ public:
 
             bool operator == (const data &rhs_) const
             {
-                return id == rhs_.id && start == rhs_.start &&
-                    end == rhs_.end && bol == rhs_.bol && state == rhs_.state;
+                return id == rhs_.id && unique_id == rhs_.unique_id &&
+                    start == rhs_.start && end == rhs_.end &&
+                    bol == rhs_.bol && state == rhs_.state;
             }
         };
 
@@ -102,39 +101,42 @@ public:
 
         void next_token ()
         {
+            const detail::internals &internals_ =
+                _input->_state_machine->data ();
+
             _data.start = _data.end;
 
-            if (_input->_state_machine->_dfa->size () == 1)
+            if (internals_._dfa->size () == 1)
             {
-                if (_input->_state_machine->_seen_BOL_assertion ||
-                    _input->_state_machine->_seen_EOL_assertion)
+                if (internals_._seen_BOL_assertion ||
+                    internals_._seen_EOL_assertion)
                 {
                     _data.id = next
-                        (&_input->_state_machine->_lookup->front ()->front (),
-                        _input->_state_machine->_dfa_alphabet.front (),
-                        &_input->_state_machine->_dfa->front ()->front (),
-                        _data.bol, _data.end, _input->_end);
+                        (&internals_._lookup->front ()->front (),
+                        internals_._dfa_alphabet.front (),
+                        &internals_._dfa->front ()->front (),
+                        _data.bol, _data.end, _input->_end, _data.unique_id);
                 }
                 else
                 {
-                    _data.id = next (&_input->_state_machine->_lookup->
-                        front ()->front (), _input->_state_machine->
-                        _dfa_alphabet.front (), &_input->_state_machine->
-                        _dfa->front ()->front (), _data.end, _input->_end);
+                    _data.id = next (&internals_._lookup->front ()->front (),
+                        internals_._dfa_alphabet.front (), &internals_.
+                        _dfa->front ()->front (), _data.end, _input->_end,
+                        _data.unique_id);
                 }
             }
             else
             {
-                if (_input->_state_machine->_seen_BOL_assertion ||
-                    _input->_state_machine->_seen_EOL_assertion)
+                if (internals_._seen_BOL_assertion ||
+                    internals_._seen_EOL_assertion)
                 {
-                    _data.id = next (*_input->_state_machine, _data.state,
-                        _data.bol, _data.end, _input->_end);
+                    _data.id = next (internals_, _data.state,
+                        _data.bol, _data.end, _input->_end, _data.unique_id);
                 }
                 else
                 {
-                    _data.id = next (*_input->_state_machine, _data.state,
-                        _data.end, _input->_end);
+                    _data.id = next (internals_, _data.state,
+                        _data.end, _input->_end, _data.unique_id);
                 }
             }
 
@@ -145,22 +147,28 @@ public:
             }
         }
 
-        std::size_t next (const basic_state_machine
-            <typename Traits::char_type> &state_machine_,
+        std::size_t next (const detail::internals &internals_,
             std::size_t &start_state_, bool bol_,
-            FwdIter &start_token_, const FwdIter &end_)
+            FwdIter &start_token_, const FwdIter &end_,
+            std::size_t &unique_id_)
         {
-            if (start_token_ == end_) return 0;
+            if (start_token_ == end_)
+            {
+                unique_id_ = npos;
+                return 0;
+            }
 
         again:
-            const std::size_t * lookup_ = &state_machine_._lookup[start_state_]->
+            const std::size_t * lookup_ = &internals_._lookup[start_state_]->
                 front ();
-            std::size_t dfa_alphabet_ = state_machine_._dfa_alphabet[start_state_];
-            const std::size_t *dfa_ = &state_machine_._dfa[start_state_]->front ();
+            std::size_t dfa_alphabet_ = internals_._dfa_alphabet[start_state_];
+            const std::size_t *dfa_ = &internals_._dfa[start_state_]->front ();
             const std::size_t *ptr_ = dfa_ + dfa_alphabet_;
             FwdIter curr_ = start_token_;
             bool end_state_ = *ptr_ != 0;
             std::size_t id_ = *(ptr_ + id_index);
+            std::size_t uid_ = *(ptr_ + unique_id_index);
+            std::size_t end_start_state_ = start_state_;
             bool end_bol_ = bol_;
             FwdIter end_token_ = start_token_;
 
@@ -199,7 +207,8 @@ public:
                 {
                     end_state_ = true;
                     id_ = *(ptr_ + id_index);
-                    start_state_ = *(ptr_ + state_index);
+                    uid_ = *(ptr_ + unique_id_index);
+                    end_start_state_ = *(ptr_ + state_index);
                     end_bol_ = bol_;
                     end_token_ = curr_;
                 }
@@ -215,7 +224,8 @@ public:
                 {
                     end_state_ = true;
                     id_ = *(ptr_ + id_index);
-                    start_state_ = *(ptr_ + state_index);
+                    uid_ = *(ptr_ + unique_id_index);
+                    end_start_state_ = *(ptr_ + state_index);
                     end_bol_ = bol_;
                     end_token_ = curr_;
                 }
@@ -224,13 +234,17 @@ public:
             if (end_state_)
             {
                 // return longest match
-                _data.bol = end_bol_;
+                start_state_ = end_start_state_;
                 start_token_ = end_token_;
 
                 if (id_ == 0)
                 {
-                    bol_ = _data.bol;
+                    bol_ = end_bol_;
                     goto again;
+                }
+                else
+                {
+                    _data.bol = end_bol_;
                 }
             }
             else
@@ -239,27 +253,34 @@ public:
                 _data.bol = *start_token_ == '\n';
                 ++start_token_;
                 id_ = npos;
+                uid_ = npos;
             }
 
+            unique_id_ = uid_;
             return id_;
         }
 
-        std::size_t next (const basic_state_machine
-            <typename Traits::char_type> &state_machine_,
+        std::size_t next (const detail::internals &internals_,
             std::size_t &start_state_, FwdIter &start_token_,
-            FwdIter const &end_)
+            FwdIter const &end_, std::size_t &unique_id_)
         {
-            if (start_token_ == end_) return 0;
+            if (start_token_ == end_)
+            {
+                unique_id_ = npos;
+                return 0;
+            }
 
         again:
-            const std::size_t * lookup_ = &state_machine_._lookup[start_state_]->
+            const std::size_t * lookup_ = &internals_._lookup[start_state_]->
                 front ();
-            std::size_t dfa_alphabet_ = state_machine_._dfa_alphabet[start_state_];
-            const std::size_t *dfa_ = &state_machine_._dfa[start_state_]->front ();
+            std::size_t dfa_alphabet_ = internals_._dfa_alphabet[start_state_];
+            const std::size_t *dfa_ = &internals_._dfa[start_state_]->front ();
             const std::size_t *ptr_ = dfa_ + dfa_alphabet_;
             FwdIter curr_ = start_token_;
             bool end_state_ = *ptr_ != 0;
             std::size_t id_ = *(ptr_ + id_index);
+            std::size_t uid_ = *(ptr_ + unique_id_index);
+            std::size_t end_start_state_ = start_state_;
             FwdIter end_token_ = start_token_;
 
             while (curr_ != end_)
@@ -278,7 +299,8 @@ public:
                 {
                     end_state_ = true;
                     id_ = *(ptr_ + id_index);
-                    start_state_ = *(ptr_ + state_index);
+                    uid_ = *(ptr_ + unique_id_index);
+                    end_start_state_ = *(ptr_ + state_index);
                     end_token_ = curr_;
                 }
             }
@@ -286,6 +308,7 @@ public:
             if (end_state_)
             {
                 // return longest match
+                start_state_ = end_start_state_;
                 start_token_ = end_token_;
 
                 if (id_ == 0) goto again;
@@ -295,21 +318,29 @@ public:
                 // No match causes char to be skipped
                 ++start_token_;
                 id_ = npos;
+                uid_ = npos;
             }
 
+            unique_id_ = uid_;
             return id_;
         }
 
         std::size_t next (const std::size_t * const lookup_,
             const std::size_t dfa_alphabet_, const std::size_t * const dfa_,
-            bool bol_, FwdIter &start_token_, FwdIter const &end_)
+            bool bol_, FwdIter &start_token_, FwdIter const &end_,
+            std::size_t &unique_id_)
         {
-            if (start_token_ == end_) return 0;
+            if (start_token_ == end_)
+            {
+                unique_id_ = npos;
+                return 0;
+            }
 
             const std::size_t *ptr_ = dfa_ + dfa_alphabet_;
             FwdIter curr_ = start_token_;
             bool end_state_ = *ptr_ != 0;
             std::size_t id_ = *(ptr_ + id_index);
+            std::size_t uid_ = *(ptr_ + unique_id_index);
             bool end_bol_ = bol_;
             FwdIter end_token_ = start_token_;
 
@@ -348,6 +379,7 @@ public:
                 {
                     end_state_ = true;
                     id_ = *(ptr_ + id_index);
+                    uid_ = *(ptr_ + unique_id_index);
                     end_bol_ = bol_;
                     end_token_ = curr_;
                 }
@@ -363,6 +395,7 @@ public:
                 {
                     end_state_ = true;
                     id_ = *(ptr_ + id_index);
+                    uid_ = *(ptr_ + unique_id_index);
                     end_bol_ = bol_;
                     end_token_ = curr_;
                 }
@@ -371,8 +404,8 @@ public:
             if (end_state_)
             {
                 // return longest match
-                start_token_ = end_token_;
                 _data.bol = end_bol_;
+                start_token_ = end_token_;
             }
             else
             {
@@ -380,21 +413,29 @@ public:
                 _data.bol = *start_token_ == '\n';
                 ++start_token_;
                 id_ = npos;
+                uid_ = npos;
             }
 
+            unique_id_ = uid_;
             return id_;
         }
 
         std::size_t next (const std::size_t * const lookup_,
             const std::size_t dfa_alphabet_, const std::size_t * const dfa_,
-            FwdIter &start_token_, FwdIter const &end_)
+            FwdIter &start_token_, FwdIter const &end_,
+            std::size_t &unique_id_)
         {
-            if (start_token_ == end_) return 0;
+            if (start_token_ == end_)
+            {
+                unique_id_ = npos;
+                return 0;
+            }
 
             const std::size_t *ptr_ = dfa_ + dfa_alphabet_;
             FwdIter curr_ = start_token_;
             bool end_state_ = *ptr_ != 0;
             std::size_t id_ = *(ptr_ + id_index);
+            std::size_t uid_ = *(ptr_ + unique_id_index);
             FwdIter end_token_ = start_token_;
 
             while (curr_ != end_)
@@ -413,6 +454,7 @@ public:
                 {
                     end_state_ = true;
                     id_ = *(ptr_ + id_index);
+                    uid_ = *(ptr_ + unique_id_index);
                     end_token_ = curr_;
                 }
             }
@@ -427,19 +469,17 @@ public:
                 // No match causes char to be skipped
                 ++start_token_;
                 id_ = npos;
+                uid_ = npos;
             }
 
+            unique_id_ = uid_;
             return id_;
         }
     };
 
-#if defined _MSC_VER && _MSC_VER <= 1200
-    friend iterator;
-#else
     friend class iterator;
-#endif
 
-    // Make it explict that we are NOT taking a copy of state_machine_!
+    // Make it explicit that we are NOT taking a copy of state_machine_!
     basic_input (const basic_state_machine<typename Traits::char_type>
         *state_machine_, const FwdIter &begin_, const FwdIter &end_) :
         _state_machine (state_machine_),
@@ -453,10 +493,11 @@ public:
         iterator iter_;
 
         iter_._input = this;
+        // Over-ride default of 0 (EOI)
         iter_._data.id = npos;
         iter_._data.start = _begin;
         iter_._data.end = _begin;
-        iter_._data.bol = _state_machine->_seen_BOL_assertion;
+        iter_._data.bol = _state_machine->data ()._seen_BOL_assertion;
         iter_._data.state = 0;
         ++iter_;
         return iter_;
@@ -479,7 +520,7 @@ private:
 };
 
 typedef basic_input<std::string::iterator> iter_input;
-typedef basic_input<std::wstring::iterator> iter_winput;
+typedef basic_input<std::basic_string<wchar_t>::iterator> iter_winput;
 typedef basic_input<const char *> ptr_input;
 typedef basic_input<const wchar_t *> ptr_winput;
 }

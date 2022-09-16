@@ -1,5 +1,5 @@
 /*=============================================================================
-    Copyright (c) 2001-2006 Joel de Guzman
+    Copyright (c) 2001-2011 Joel de Guzman
 
     Distributed under the Boost Software License, Version 1.0. (See accompanying 
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -7,6 +7,7 @@
 #if !defined(FUSION_DEREF_05042005_1019)
 #define FUSION_DEREF_05042005_1019
 
+#include <boost/fusion/support/config.hpp>
 #include <boost/fusion/support/iterator_base.hpp>
 #include <boost/fusion/support/tag_of.hpp>
 
@@ -14,7 +15,7 @@ namespace boost { namespace fusion
 {
     // Special tags:
     struct iterator_facade_tag; // iterator facade tag
-    struct array_iterator_tag; // boost::array iterator tag
+    struct boost_array_iterator_tag; // boost::array iterator tag
     struct mpl_iterator_tag; // mpl sequence iterator tag
     struct std_pair_iterator_tag; // std::pair iterator tag
 
@@ -35,7 +36,7 @@ namespace boost { namespace fusion
        };
 
         template <>
-        struct deref_impl<array_iterator_tag>;
+        struct deref_impl<boost_array_iterator_tag>;
 
         template <>
         struct deref_impl<mpl_iterator_tag>;
@@ -54,7 +55,8 @@ namespace boost { namespace fusion
     }
 
     template <typename Iterator>
-    typename result_of::deref<Iterator>::type
+    BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
+    inline typename result_of::deref<Iterator>::type
     deref(Iterator const& i)
     {
         typedef result_of::deref<Iterator> deref_meta;
@@ -62,7 +64,8 @@ namespace boost { namespace fusion
     }
 
     template <typename Iterator>
-    typename result_of::deref<Iterator>::type
+    BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
+    inline typename result_of::deref<Iterator>::type
     operator*(iterator_base<Iterator> const& i)
     {
         return fusion::deref(i.cast());

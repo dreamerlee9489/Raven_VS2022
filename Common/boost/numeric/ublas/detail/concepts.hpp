@@ -499,6 +499,7 @@ namespace boost { namespace numeric { namespace ublas {
 
         void constraints () {
             function_requires< VectorConcept<vector_type> >();
+            function_requires< DefaultConstructible<vector_type> >();
             function_requires< Mutable_VectorExpressionConcept<vector_type> >();
             size_type n (0);
             value_type t = value_type ();
@@ -579,6 +580,7 @@ namespace boost { namespace numeric { namespace ublas {
 
         void constraints () {
             function_requires< MatrixConcept<matrix_type> >();
+            function_requires< DefaultConstructible<matrix_type> >();
             function_requires< Mutable_MatrixExpressionConcept<matrix_type> >();
             size_type n (0);
             value_type t = value_type ();
@@ -632,113 +634,43 @@ namespace boost { namespace numeric { namespace ublas {
         }
     };
 
+    /** introduce anonymous namespace to make following functions
+     * local to the current compilation unit.
+     */
+    namespace {
+
+    // Replaced the ZeroElement and OneElement functions with the templated versions
+    // because the former where giving warnings with clang
     template<class T>
     T
-    ZeroElement (T);
-    template<>
-    float
-    ZeroElement (float) {
-        return 0.f;
+    ZeroElement (T) {
+        return static_cast<T> (0);
     }
-    template<>
-    double
-    ZeroElement (double) {
-        return 0.;
+
+    template<class T>
+    vector<T>
+    ZeroElement (vector<T>) {
+        return zero_vector<T> ();
     }
-    template<>
-    vector<float>
-    ZeroElement (vector<float>) {
-        return zero_vector<float> ();
-    }
-    template<>
-    vector<double>
-    ZeroElement (vector<double>) {
-        return zero_vector<double> ();
-    }
-    template<>
-    matrix<float>
-    ZeroElement (matrix<float>) {
-        return zero_matrix<float> ();
-    }
-    template<>
-    matrix<double>
-    ZeroElement (matrix<double>) {
-        return zero_matrix<double> ();
-    }
-    template<>
-    std::complex<float>
-    ZeroElement (std::complex<float>) {
-        return std::complex<float> (0.f);
-    }
-    template<>
-    std::complex<double>
-    ZeroElement (std::complex<double>) {
-        return std::complex<double> (0.);
-    }
-    template<>
-    vector<std::complex<float> >
-    ZeroElement (vector<std::complex<float> >) {
-        return zero_vector<std::complex<float> > ();
-    }
-    template<>
-    vector<std::complex<double> >
-    ZeroElement (vector<std::complex<double> >) {
-        return zero_vector<std::complex<double> > ();
-    }
-    template<>
-    matrix<std::complex<float> >
-    ZeroElement (matrix<std::complex<float> >) {
-        return zero_matrix<std::complex<float> > ();
-    }
-    template<>
-    matrix<std::complex<double> >
-    ZeroElement (matrix<std::complex<double> >) {
-        return zero_matrix<std::complex<double> > ();
+
+    template<class T>
+    matrix<T>
+    ZeroElement (matrix<T>) {
+        return zero_matrix<T> ();
     }
 
     template<class T>
     T
-    OneElement (T);
-    template<>
-    float
-    OneElement (float) {
-        return 1.f;
+    OneElement (T) {
+        return static_cast<T> (1);
     }
-    template<>
-    double
-    OneElement (double) {
-        return 1.;
+
+    template<class T>
+    matrix<T>
+    OneElement (matrix<T>) {
+        return identity_matrix<T> ();
     }
-    template<>
-    matrix<float>
-    OneElement (matrix<float>) {
-        return identity_matrix<float> ();
-    }
-    template<>
-    matrix<double>
-    OneElement (matrix<double>) {
-        return identity_matrix<double> ();
-    }
-    template<>
-    std::complex<float>
-    OneElement (std::complex<float>) {
-        return std::complex<float> (1.f);
-    }
-    template<>
-    std::complex<double>
-    OneElement (std::complex<double>) {
-        return std::complex<double> (1.);
-    }
-    template<>
-    matrix<std::complex<float> >
-    OneElement (matrix<std::complex<float> >) {
-        return identity_matrix<std::complex<float> > ();
-    }
-    template<>
-    matrix<std::complex<double> >
-    OneElement (matrix<std::complex<double> >) {
-        return identity_matrix<std::complex<double> > ();
-    }
+
 
     template<class E1, class E2>
     bool
@@ -886,7 +818,7 @@ namespace boost { namespace numeric { namespace ublas {
         }
     };
 
-    void concept_checks () {
+inline void concept_checks () {
 
         // Allow tests to be group to keep down compiler storage requirement
 #ifdef INTERAL
@@ -897,6 +829,9 @@ namespace boost { namespace numeric { namespace ublas {
 #define INTERNAL_SPARSE
 #define INTERNAL_EXPRESSION
 #endif
+
+        // TODO enable this for development
+        // #define VIEW_CONCEPTS
 
         // Element value type for tests
         typedef float T;
@@ -969,7 +904,7 @@ namespace boost { namespace numeric { namespace ublas {
         }
 #endif
 
-#if defined (VECTOR_VIEW)
+#ifdef VIEW_CONCEPTS
         // read only vectors
         {
            typedef vector_view<T> container_model;
@@ -1402,12 +1337,12 @@ namespace boost { namespace numeric { namespace ublas {
             function_requires< IndexedRandomAccess1DIteratorConcept<expression_model::const_reverse_iterator> >();
         }
 
-        function_requires< ScalarExpressionConcept<vector_scalar_unary<vector<T>, vector_sum<T> > > >();
-        function_requires< ScalarExpressionConcept<vector_scalar_unary<vector<T>, vector_norm_1<T> > > >();
-        function_requires< ScalarExpressionConcept<vector_scalar_unary<vector<T>, vector_norm_2<T> > > >();
-        function_requires< ScalarExpressionConcept<vector_scalar_unary<vector<T>, vector_norm_inf<T> > > >();
+        function_requires< ScalarExpressionConcept<vector_scalar_unary<vector<T>, vector_sum<vector<T> > > > >();
+        function_requires< ScalarExpressionConcept<vector_scalar_unary<vector<T>, vector_norm_1<vector<T> > > > >();
+        function_requires< ScalarExpressionConcept<vector_scalar_unary<vector<T>, vector_norm_2<vector<T> > > > >();
+        function_requires< ScalarExpressionConcept<vector_scalar_unary<vector<T>, vector_norm_inf<vector<T> > > > >();
 
-        function_requires< ScalarExpressionConcept<vector_scalar_binary<vector<T>, vector<T>, vector_inner_prod<T, T, T> > > >();
+        function_requires< ScalarExpressionConcept<vector_scalar_binary<vector<T>, vector<T>, vector_inner_prod<vector<T>, vector<T>, T> > > >();
 #endif
 
         // Matrix Expressions
@@ -1479,49 +1414,51 @@ namespace boost { namespace numeric { namespace ublas {
         }
 
         {
-            typedef matrix_vector_binary1<matrix<T>, vector<T>, matrix_vector_prod1<T, T, T> > expression_model;
+            typedef matrix_vector_binary1<matrix<T>, vector<T>, matrix_vector_prod1<matrix<T>, vector<T>, T> > expression_model;
             function_requires< VectorExpressionConcept<expression_model> >();
             function_requires< IndexedRandomAccess1DIteratorConcept<expression_model::const_iterator> >();
             function_requires< IndexedRandomAccess1DIteratorConcept<expression_model::const_reverse_iterator> >();
         }
 
         {
-            typedef matrix_vector_binary2<vector<T>, matrix<T>, matrix_vector_prod2<T, T, T> > expression_model;
+            typedef matrix_vector_binary2<vector<T>, matrix<T>, matrix_vector_prod2<matrix<T>, vector<T>, T > > expression_model;
             function_requires< VectorExpressionConcept<expression_model> >();
             function_requires< IndexedRandomAccess1DIteratorConcept<expression_model::const_iterator> >();
             function_requires< IndexedRandomAccess1DIteratorConcept<expression_model::const_reverse_iterator> >();
         }
 
         {
-            typedef matrix_matrix_binary<matrix<T>, matrix<T>, matrix_matrix_prod<T, T, T> > expression_model;
+            typedef matrix_matrix_binary<matrix<T>, matrix<T>, matrix_matrix_prod<matrix<T>, matrix<T>, T > > expression_model;
             function_requires< MatrixExpressionConcept<expression_model> >();
             function_requires< IndexedRandomAccess2DIteratorConcept<expression_model::const_iterator1, expression_model::const_iterator2> >();
             function_requires< IndexedRandomAccess2DIteratorConcept<expression_model::const_reverse_iterator1, expression_model::const_reverse_iterator2> >();
         }
 
-        function_requires< ScalarExpressionConcept<matrix_scalar_unary<matrix<T>, matrix_norm_1<T> > > >();
-        function_requires< ScalarExpressionConcept<matrix_scalar_unary<matrix<T>, matrix_norm_frobenius<T> > > >();
-        function_requires< ScalarExpressionConcept<matrix_scalar_unary<matrix<T>, matrix_norm_inf<T> > > >();
+        function_requires< ScalarExpressionConcept<matrix_scalar_unary<matrix<T>, matrix_norm_1<vector<T> > > > >();
+        function_requires< ScalarExpressionConcept<matrix_scalar_unary<matrix<T>, matrix_norm_frobenius<vector<T> > > > >();
+        function_requires< ScalarExpressionConcept<matrix_scalar_unary<matrix<T>, matrix_norm_inf<vector<T> > > > >();
 #endif
 
 #ifdef EXTERNAL
-        function_requires< AdditiveAbelianGroupConcept<float> >();
-        function_requires< CommutativeRingWithIdentityConcept<float> >();
-        function_requires< FieldConcept<float> >();
-        function_requires< VectorSpaceConcept<float, vector<float> > >();
-        function_requires< Prod_RingWithIdentityConcept<matrix<float> > >();
-        function_requires< VectorSpaceConcept<float, matrix<float> > >();
-        function_requires< LinearOperatorConcept<float, vector<float>, matrix<float> > >();
+        function_requires< AdditiveAbelianGroupConcept<T> >();
+        function_requires< CommutativeRingWithIdentityConcept<T> >();
+        function_requires< FieldConcept<T> >();
+        function_requires< VectorSpaceConcept<T, vector<T> > >();
+        function_requires< Prod_RingWithIdentityConcept<matrix<T> > >();
+        function_requires< VectorSpaceConcept<T, matrix<T> > >();
+        function_requires< LinearOperatorConcept<T, vector<T>, matrix<T> > >();
 
-        function_requires< AdditiveAbelianGroupConcept<std::complex<float> > >();
-        function_requires< CommutativeRingWithIdentityConcept<std::complex<float> > >();
-        function_requires< FieldConcept<std::complex<float> > >();
-        function_requires< VectorSpaceConcept<std::complex<float>, vector<std::complex<float> > > >();
-        function_requires< Prod_RingWithIdentityConcept<matrix<std::complex<float> > > >();
-        function_requires< VectorSpaceConcept<std::complex<float>, matrix<std::complex<float> > > >();
-        function_requires< LinearOperatorConcept<std::complex<float>, vector<std::complex<float> >, matrix<std::complex<float> > > >();
+        function_requires< AdditiveAbelianGroupConcept<std::complex<T> > >();
+        function_requires< CommutativeRingWithIdentityConcept<std::complex<T> > >();
+        function_requires< FieldConcept<std::complex<T> > >();
+        function_requires< VectorSpaceConcept<std::complex<T>, vector<std::complex<T> > > >();
+        function_requires< Prod_RingWithIdentityConcept<matrix<std::complex<T> > > >();
+        function_requires< VectorSpaceConcept<std::complex<T>, matrix<std::complex<T> > > >();
+        function_requires< LinearOperatorConcept<std::complex<T>, vector<std::complex<T> >, matrix<std::complex<T> > > >();
 #endif
     }
+
+    } // end of anonymous namespace
 
 }}}
 

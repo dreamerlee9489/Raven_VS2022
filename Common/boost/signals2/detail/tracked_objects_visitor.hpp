@@ -12,8 +12,8 @@
 #ifndef BOOST_SIGNALS2_TRACKED_OBJECTS_VISITOR_HPP
 #define BOOST_SIGNALS2_TRACKED_OBJECTS_VISITOR_HPP
 
+#include <boost/core/ref.hpp>
 #include <boost/mpl/bool.hpp>
-#include <boost/ref.hpp>
 #include <boost/signals2/detail/signals_common.hpp>
 #include <boost/signals2/slot_base.hpp>
 #include <boost/signals2/trackable.hpp>
@@ -58,7 +58,7 @@ namespace boost
         template<typename T>
         void m_visit_pointer(const T &t, const mpl::bool_<false> &) const
         {
-            m_visit_pointer(addressof(t), mpl::bool_<true>());
+            m_visit_pointer(boost::addressof(t), mpl::bool_<true>());
         }
         template<typename T>
         void m_visit_not_function_pointer(const T *t, const mpl::bool_<true> &) const
@@ -82,7 +82,7 @@ namespace boost
         void add_if_trackable(const trackable *trackable) const
         {
           if(trackable)
-            slot_->_tracked_objects.push_back(trackable->get_shared_ptr());
+            slot_->_tracked_objects.push_back(trackable->get_weak_ptr());
         }
         void add_if_trackable(const void *) const {}
 

@@ -6,14 +6,14 @@
 #ifndef BOOST_MATH_REAL_TYPE_CONCEPT_HPP
 #define BOOST_MATH_REAL_TYPE_CONCEPT_HPP
 
-#ifdef BOOST_MSVC
+#include <cmath>
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4100)
 #pragma warning(disable: 4510)
 #pragma warning(disable: 4610)
 #endif
-#include <boost/concept_check.hpp>
-#ifdef BOOST_MSVC
+#ifdef _MSC_VER
 #pragma warning(pop)
 #endif
 #include <boost/math/tools/config.hpp>
@@ -44,17 +44,29 @@ struct RealTypeConcept
       r = o / r;
       bool b;
       b = r == o;
+      suppress_unused_variable_warning(b);
       b = o == r;
+      suppress_unused_variable_warning(b);
       b = r != o;
+      suppress_unused_variable_warning(b);
       b = o != r;
+      suppress_unused_variable_warning(b);
       b = r <= o;
+      suppress_unused_variable_warning(b);
       b = o <= r;
+      suppress_unused_variable_warning(b);
       b = r >= o;
+      suppress_unused_variable_warning(b);
       b = o >= r;
+      suppress_unused_variable_warning(b);
       b = r < o;
+      suppress_unused_variable_warning(b);
       b = o < r;
+      suppress_unused_variable_warning(b);
       b = r > o;
+      suppress_unused_variable_warning(b);
       b = o > r;
+      suppress_unused_variable_warning(b);
    }
 
    void constraints()
@@ -70,9 +82,7 @@ struct RealTypeConcept
       //check_binary_ops(1u);
       check_binary_ops(1L);
       //check_binary_ops(1uL);
-#ifndef BOOST_HAS_LONG_LONG
       check_binary_ops(1LL);
-#endif
       RealType r2 = +r;
       r2 = -r;
 

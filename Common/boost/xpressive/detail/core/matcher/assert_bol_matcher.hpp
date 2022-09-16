@@ -9,7 +9,7 @@
 #define BOOST_XPRESSIVE_DETAIL_CORE_MATCHER_ASSERT_BOL_MATCHER_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -31,8 +31,8 @@ namespace boost { namespace xpressive { namespace detail
     {
         typedef typename Traits::char_type char_type;
 
-        assert_bol_matcher(Traits const &traits)
-          : assert_line_base<Traits>(traits)
+        assert_bol_matcher(Traits const &tr)
+          : assert_line_base<Traits>(tr)
         {
         }
 

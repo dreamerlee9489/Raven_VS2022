@@ -1,15 +1,16 @@
 // string_token.hpp
-// Copyright (c) 2007-2008 Ben Hanson (http://www.benhanson.net/)
+// Copyright (c) 2007-2009 Ben Hanson (http://www.benhanson.net/)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file licence_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef BOOST_LEXER_STRING_TOKEN_HPP
-#define BOOST_LEXER_STRING_TOKEN_HPP
+#ifndef BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_STRING_TOKEN_HPP
+#define BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_STRING_TOKEN_HPP
 
 #include <algorithm>
 #include "size_t.hpp"
 #include "consts.hpp" // num_chars, num_wchar_ts
 #include <string>
+#include <limits>
 
 namespace boost
 {
@@ -55,11 +56,7 @@ struct basic_string_token
         if (_charset.length () == max_chars_)
         {
             _negated = !_negated;
-#if defined _MSC_VER && _MSC_VER <= 1200
-            _charset.erase ();
-#else
             _charset.clear ();
-#endif
         }
         else if (_charset.length () > max_chars_ / 2)
         {
@@ -71,7 +68,7 @@ struct basic_string_token
     {
         const std::size_t max_chars_ = sizeof (CharT) == 1 ?
             num_chars : num_wchar_ts;
-        CharT curr_char_ = sizeof (CharT) == 1 ? -128 : 0;
+        CharT curr_char_ = (std::numeric_limits<CharT>::min)();
         string temp_;
         const CharT *curr_ = _charset.c_str ();
         const CharT *chars_end_ = curr_ + _charset.size ();
@@ -126,16 +123,12 @@ struct basic_string_token
     void clear ()
     {
         _negated = false;
-#if defined _MSC_VER && _MSC_VER <= 1200
-            _charset.erase ();
-#else
-            _charset.clear ();
-#endif
+        _charset.clear ();
     }
 
     void intersect (basic_string_token &rhs_, basic_string_token &overlap_)
     {
-        if (any () && rhs_.any () || (_negated == rhs_._negated &&
+        if ((any () && rhs_.any ()) || (_negated == rhs_._negated &&
             !any () && !rhs_.any ()))
         {
             intersect_same_types (rhs_, overlap_);
@@ -146,8 +139,85 @@ struct basic_string_token
         }
     }
 
+    static void escape_char (const CharT ch_, string &out_)
+    {
+        switch (ch_)
+        {
+            case '\0':
+                out_ += '\\';
+                out_ += '0';
+                break;
+            case '\a':
+                out_ += '\\';
+                out_ += 'a';
+                break;
+            case '\b':
+                out_ += '\\';
+                out_ += 'b';
+                break;
+            case 27:
+                out_ += '\\';
+                out_ += 'x';
+                out_ += '1';
+                out_ += 'b';
+                break;
+            case '\f':
+                out_ += '\\';
+                out_ += 'f';
+                break;
+            case '\n':
+                out_ += '\\';
+                out_ += 'n';
+                break;
+            case '\r':
+                out_ += '\\';
+                out_ += 'r';
+                break;
+            case '\t':
+                out_ += '\\';
+                out_ += 't';
+                break;
+            case '\v':
+                out_ += '\\';
+                out_ += 'v';
+                break;
+            case '\\':
+                out_ += '\\';
+                out_ += '\\';
+                break;
+            case '"':
+                out_ += '\\';
+                out_ += '"';
+                break;
+            case '\'':
+                out_ += '\\';
+                out_ += '\'';
+                break;
+            default:
+            {
+                if (ch_ < 32 && ch_ >= 0)
+                {
+                    std::basic_stringstream<CharT> ss_;
+
+                    out_ += '\\';
+                    out_ += 'x';
+                    ss_ << std::hex <<
+                        static_cast<std::size_t> (ch_);
+                    out_ += ss_.str ();
+                }
+                else
+                {
+                    out_ += ch_;
+                }
+
+                break;
+            }
+        }
+    }
+
 private:
-    void intersect_same_types (basic_string_token &rhs_, basic_string_token &overlap_)
+    void intersect_same_types (basic_string_token &rhs_,
+        basic_string_token &overlap_)
     {
         if (any ())
         {

@@ -9,7 +9,7 @@
 #define BOOST_XPRESSIVE_DETAIL_CORE_MATCHER_REPEAT_END_MATCHER_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -33,8 +33,8 @@ namespace boost { namespace xpressive { namespace detail
         unsigned int min_, max_;
         mutable void const *back_;
 
-        repeat_end_matcher(int mark_number, unsigned int min, unsigned int max)
-          : mark_number_(mark_number)
+        repeat_end_matcher(int mark_nbr, unsigned int min, unsigned int max)
+          : mark_number_(mark_nbr)
           , min_(min)
           , max_(max)
           , back_(0)

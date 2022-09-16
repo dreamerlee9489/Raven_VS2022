@@ -11,8 +11,11 @@
 #ifndef BOOST_UNITS_UNITS_FWD_HPP
 #define BOOST_UNITS_UNITS_FWD_HPP
 
+///
 /// \file
-/// Forward declarations of library components.
+/// \brief Forward declarations of library components.
+/// \details Forward declarations of units library - dimensions, systems, quantity and string components.
+///
 
 #ifndef BOOST_UNITS_DOXYGEN
 
@@ -38,13 +41,15 @@ template<class Y> class absolute;
 
 template<class Dim,class System, class Enable=void> class unit;
 
+template<long Base, class Exponent> struct scale;
+
 template<class BaseUnitTag> struct base_unit_info;
 template<class System> struct dimensionless_unit;
 template<class T> struct is_unit;
 template<class T,class Dim> struct is_unit_of_dimension;
 template<class T,class System> struct is_unit_of_system;
 
-template<class Unit,class Y> class quantity;
+template<class Unit,class Y = double> class quantity;
 
 template<class System,class Y> struct dimensionless_quantity;
 template<class T> struct is_quantity;

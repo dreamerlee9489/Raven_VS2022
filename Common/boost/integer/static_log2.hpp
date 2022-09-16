@@ -6,17 +6,18 @@
 //
 //     Distributed under the Boost Software License, Version 1.0.
 //        (See accompanying file LICENSE_1_0.txt or copy at
-//              http://www.boost.org/LICENSE_1_0.txt)
+//              https://www.boost.org/LICENSE_1_0.txt)
 //
 //         ---------------------------------------------------
-//       See http://www.boost.org/libs/integer for documentation.
+//       See https://www.boost.org/libs/integer for documentation.
 // ------------------------------------------------------------------------- //
 
 
 #ifndef BOOST_INTEGER_STATIC_LOG2_HPP
 #define BOOST_INTEGER_STATIC_LOG2_HPP
 
-#include "boost/config.hpp" // for BOOST_STATIC_CONSTANT
+#include <boost/config.hpp>
+#include <boost/integer_fwd.hpp>
 
 namespace boost {
 
@@ -41,9 +42,8 @@ namespace boost {
      // terminates with x = 1 and n = 0 (see the algorithm's
      // invariant).
 
-     typedef unsigned long argument_type;
-     typedef          int  result_type;
-
+     typedef boost::static_log2_argument_type argument_type;
+     typedef boost::static_log2_result_type result_type;
 
      template <result_type n>
      struct choose_initial_n {
@@ -107,10 +107,6 @@ namespace boost {
  // static_log2<x>
  // ----------------------------------------
 
- typedef detail::static_log2_impl::argument_type static_log2_argument_type;
- typedef detail::static_log2_impl::result_type   static_log2_result_type;
-
-
  template <static_log2_argument_type x>
  struct static_log2 {
 
@@ -126,7 +122,5 @@ namespace boost {
  struct static_log2<0> { };
 
 }
-
-
 
 #endif // include guard

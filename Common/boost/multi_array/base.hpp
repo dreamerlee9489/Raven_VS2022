@@ -10,8 +10,8 @@
 //           Andrew Lumsdaine
 //  See http://www.boost.org/libs/multi_array for documentation.
 
-#ifndef BASE_RG071801_HPP
-#define BASE_RG071801_HPP
+#ifndef BOOST_MULTI_ARRAY_BASE_HPP
+#define BOOST_MULTI_ARRAY_BASE_HPP
 
 //
 // base.hpp - some implementation base classes for from which
@@ -29,7 +29,6 @@
 #include "boost/mpl/eval_if.hpp"
 #include "boost/mpl/if.hpp"
 #include "boost/mpl/size_t.hpp"
-#include "boost/mpl/aux_/msvc_eti_base.hpp"
 #include "boost/iterator/reverse_iterator.hpp"
 #include "boost/static_assert.hpp"
 #include "boost/type.hpp"
@@ -65,7 +64,7 @@ namespace multi_array_types {
 // object creation in small-memory environments.  Thus, the objects
 // can be left undefined by defining BOOST_MULTI_ARRAY_NO_GENERATORS 
 // before loading multi_array.hpp.
-#if !BOOST_MULTI_ARRAY_NO_GENERATORS
+#ifndef BOOST_MULTI_ARRAY_NO_GENERATORS
 namespace {
   multi_array_types::extent_gen extents;
   multi_array_types::index_gen indices;
@@ -81,7 +80,8 @@ class sub_array;
 template <typename T, std::size_t NumDims, typename TPtr = const T*>
 class const_sub_array;
 
-template <typename T, typename TPtr, typename NumDims, typename Reference>
+  template <typename T, typename TPtr, typename NumDims, typename Reference,
+            typename IteratorCategory>
 class array_iterator;
 
 template <typename T, std::size_t NumDims, typename TPtr = const T*>
@@ -209,49 +209,28 @@ struct value_accessor_generator {
   >::type type;
 };
 
-#if BOOST_WORKAROUND(BOOST_MSVC, < 1300)
-
-struct eti_value_accessor
-{
-  typedef int index;
-  typedef int size_type;
-  typedef int element;
-  typedef int index_range;
-  typedef int value_type;
-  typedef int reference;
-  typedef int const_reference;
-};
-    
-template <>
-struct value_accessor_generator<int,int>
-{
-  typedef eti_value_accessor type;
-};
-
-template <class T, class NumDims>
-struct associated_types
-  : mpl::aux::msvc_eti_base<
-        typename value_accessor_generator<T,NumDims>::type
-    >::type
-{};
-
-template <>
-struct associated_types<int,int> : eti_value_accessor {};
-
-#else
-
 template <class T, class NumDims>
 struct associated_types
   : value_accessor_generator<T,NumDims>::type
 {};
 
-#endif
-
 //
 // choose value accessor ends
 /////////////////////////////////////////////////////////////////////////
 
-
+// Due to some imprecision in the C++ Standard, 
+// MSVC 2010 is broken in debug mode: it requires
+// that an Output Iterator have output_iterator_tag in its iterator_category if 
+// that iterator is not bidirectional_iterator or random_access_iterator.
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1600)
+struct mutable_iterator_tag
+ : boost::random_access_traversal_tag, std::input_iterator_tag
+{
+  operator std::output_iterator_tag() const {
+    return std::output_iterator_tag();
+  }
+};
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // multi_array_base
@@ -259,13 +238,7 @@ struct associated_types
 template <typename T, std::size_t NumDims>
 class multi_array_impl_base
   :
-#if BOOST_WORKAROUND(BOOST_MSVC, < 1300)
-      public mpl::aux::msvc_eti_base<
-          typename value_accessor_generator<T,mpl::size_t<NumDims> >::type
-       >::type
-#else
       public value_accessor_generator<T,mpl::size_t<NumDims> >::type
-#endif 
 {
   typedef associated_types<T,mpl::size_t<NumDims> > types;
 public:
@@ -301,8 +274,16 @@ public:
   //
   // iterator support
   //
-  typedef array_iterator<T,T*,mpl::size_t<NumDims>,reference> iterator;
-  typedef array_iterator<T,T const*,mpl::size_t<NumDims>,const_reference> const_iterator;
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1600)
+  // Deal with VC 2010 output_iterator_tag requirement
+  typedef array_iterator<T,T*,mpl::size_t<NumDims>,reference,
+                         mutable_iterator_tag> iterator;
+#else
+  typedef array_iterator<T,T*,mpl::size_t<NumDims>,reference,
+                         boost::random_access_traversal_tag> iterator;
+#endif
+  typedef array_iterator<T,T const*,mpl::size_t<NumDims>,const_reference,
+                         boost::random_access_traversal_tag> const_iterator;
 
   typedef ::boost::reverse_iterator<iterator> reverse_iterator;
   typedef ::boost::reverse_iterator<const_iterator> const_reverse_iterator;
@@ -321,7 +302,8 @@ protected:
                            const size_type* extents,
                            const index* strides,
                            const index* index_bases) const {
-
+    boost::function_requires<
+      CollectionConcept<IndexList> >();
     ignore_unused_variable_warning(index_bases);
     ignore_unused_variable_warning(extents);
 #if !defined(NDEBUG) && !defined(BOOST_DISABLE_ASSERTS)
@@ -332,9 +314,15 @@ protected:
 #endif
 
     index offset = 0;
-    for (size_type n = 0; n != NumDims; ++n) 
-      offset += indices[n] * strides[n];
-    
+    {
+      typename IndexList::const_iterator i = indices.begin();
+      size_type n = 0; 
+      while (n != NumDims) {
+        offset += (*i) * strides[n];
+        ++n;
+        ++i;
+      }
+    }
     return base[offset];
   }
 
@@ -431,22 +419,53 @@ protected:
     index offset = 0;
     size_type dim = 0;
     for (size_type n = 0; n != NumDims; ++n) {
+
+      // Use array specs and input specs to produce real specs.
       const index default_start = index_bases[n];
       const index default_finish = default_start+extents[n];
       const index_range& current_range = indices.ranges_[n];
       index start = current_range.get_start(default_start);
       index finish = current_range.get_finish(default_finish);
-      index index_factor = current_range.stride();
+      index stride = current_range.stride();
+      BOOST_ASSERT(stride != 0);
 
-      // integral trick for ceiling((finish-start) / index_factor)
-      index shrinkage = index_factor > 0 ? 1 : -1;
-      index len = (finish - start + (index_factor - shrinkage)) / index_factor;
+      // An index range indicates a half-open strided interval 
+      // [start,finish) (with stride) which faces upward when stride 
+      // is positive and downward when stride is negative, 
 
+      // RG: The following code for calculating length suffers from 
+      // some representation issues: if finish-start cannot be represented as
+      // by type index, then overflow may result.
+
+      index len;
+      if ((finish - start) / stride < 0) {
+        // [start,finish) is empty according to the direction imposed by 
+        // the stride.
+        len = 0;
+      } else {
+        // integral trick for ceiling((finish-start) / stride) 
+        // taking into account signs.
+        index shrinkage = stride > 0 ? 1 : -1;
+        len = (finish - start + (stride - shrinkage)) / stride;
+      }
+
+      // start marks the closed side of the range, so it must lie
+      // exactly in the set of legal indices
+      // with a special case for empty arrays
       BOOST_ASSERT(index_bases[n] <= start &&
-                   start <= index_bases[n]+index(extents[n]));
-      BOOST_ASSERT(index_bases[n] <= finish &&
-                   finish <= index_bases[n]+index(extents[n]));
-      BOOST_ASSERT(index_factor != 0);
+                   ((start <= index_bases[n]+index(extents[n])) ||
+                     (start == index_bases[n] && extents[n] == 0)));
+
+#ifndef BOOST_DISABLE_ASSERTS
+      // finish marks the open side of the range, so it can go one past
+      // the "far side" of the range (the top if stride is positive, the bottom
+      // if stride is negative).
+      index bound_adjustment = stride < 0 ? 1 : 0;
+      BOOST_ASSERT(((index_bases[n] - bound_adjustment) <= finish) &&
+        (finish <= (index_bases[n] + index(extents[n]) - bound_adjustment)));
+      ignore_unused_variable_warning(bound_adjustment);
+#endif // BOOST_DISABLE_ASSERTS
+
 
       // the array data pointer is modified to account for non-zero
       // bases during slicing (see [Garcia] for the math involved)
@@ -454,9 +473,9 @@ protected:
 
       if (!current_range.is_degenerate()) {
 
-        // The index_factor for each dimension is included into the
+        // The stride for each dimension is included into the
         // strides for the array_view (see [Garcia] for the math involved).
-        new_strides[dim] = index_factor * strides[n];
+        new_strides[dim] = stride * strides[n];
         
         // calculate new extents
         new_extents[dim] = len;
@@ -479,4 +498,4 @@ protected:
 
 } // namespace boost
 
-#endif // BASE_RG071801_HPP
+#endif

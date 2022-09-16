@@ -16,8 +16,11 @@
 # pragma warning(disable:4244)    // Conversion: possible loss of data.
 # pragma warning(disable:4512)    // Assignment operator could not be generated.
 # pragma warning(disable:4706)    // Assignment within conditional expression.
+# if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
+#  pragma warning(disable:6334)   // sizeof applied to an expression with an operator.
+# endif
 #else
-# if BOOST_WORKAROUND(__BORLANDC__, < 0x600)
+# if BOOST_WORKAROUND(BOOST_BORLANDC, < 0x600)
 #  pragma warn -8008     // Condition always true/false.
 #  pragma warn -8066     // Unreachable code.
 #  pragma warn -8071     // Conversion may lose significant digits.

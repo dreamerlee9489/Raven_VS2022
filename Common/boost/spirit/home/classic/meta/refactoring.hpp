@@ -21,6 +21,11 @@ namespace boost { namespace spirit {
 
 BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
 
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
+#pragma warning(push)
+#pragma warning(disable:4512) //assignment operator could not be generated
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  refactor_unary_parser class
@@ -192,7 +197,7 @@ const refactor_action_gen<> refactor_action_d = refactor_action_gen<>();
 //  attach_action_parser class
 //
 //      This helper template allows to attach an action given separately
-//      to to all parsers, out of which the given parser is constructed and
+//      to all parsers, out of which the given parser is constructed and
 //      reconstructs a new parser having the same structure.
 //
 //      For instance the parser:
@@ -203,7 +208,7 @@ const refactor_action_gen<> refactor_action_d = refactor_action_gen<>();
 //              >> another_parser[some_attached_functor]
 //
 //      The original parser should be a action_parser_category parser,
-//      else the compilation will fail
+//      else the compilation will fail.
 //
 //      If the parser, to which the action is attached is not an binary parser,
 //      no refactoring is done at all.
@@ -268,6 +273,10 @@ private:
 };
 
 const attach_action_gen<> attach_action_d = attach_action_gen<>();
+
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
+#pragma warning(pop)
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 BOOST_SPIRIT_CLASSIC_NAMESPACE_END

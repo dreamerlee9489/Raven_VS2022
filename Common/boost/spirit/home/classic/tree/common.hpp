@@ -26,7 +26,7 @@
 #include <boost/call_traits.hpp>
 #include <boost/spirit/home/classic/namespace.hpp>
 #include <boost/spirit/home/classic/core.hpp>
-#include <boost/detail/iterator.hpp> // for boost::detail::iterator_traits
+#include <boost/assert.hpp>
 
 #if defined(BOOST_SPIRIT_DEBUG) && \
     (BOOST_SPIRIT_DEBUG_FLAGS & BOOST_SPIRIT_DEBUG_FLAGS_NODES)
@@ -35,6 +35,8 @@
 #endif
 
 #include <boost/spirit/home/classic/tree/common_fwd.hpp>
+
+#include <iterator> // for std::iterator_traits, std::distance
 
 namespace boost { namespace spirit {
 
@@ -95,13 +97,6 @@ struct tree_node
     {
         impl::cp_swap(value, x.value);
         impl::cp_swap(children, x.children);
-    }
-
-// Intel V5.0.1 has a problem without this explicit operator=
-    tree_node &operator= (tree_node const &rhs)
-    {
-        tree_node(rhs).swap(*this);
-        return *this;
     }
 };
 
@@ -241,7 +236,7 @@ template <typename IteratorT = char const*, typename ValueT = nil_t>
 struct node_val_data
 {
     typedef
-        typename boost::detail::iterator_traits<IteratorT>::value_type
+        typename std::iterator_traits<IteratorT>::value_type
         value_type;
 
 #if !defined(BOOST_SPIRIT_USE_BOOST_ALLOCATOR_FOR_TREES)
@@ -462,7 +457,7 @@ public:
             {
                 // See docs: reduced_node_d cannot be used with a
                 // rule inside the [].
-                assert(i->children.size() == 0);
+                BOOST_ASSERT(i->children.size() == 0);
                 c.insert(c.end(), i->value.begin(), i->value.end());
             }
             return node_t(c.begin(), c.end());
@@ -504,7 +499,7 @@ public:
             for (typename ContainerT::const_iterator i = nodes.begin();
                     i != i_end; ++i)
             {
-                assert(i->children.size() == 0);
+                BOOST_ASSERT(i->children.size() == 0);
                 c.insert(c.end(), i->value.begin(), i->value.end());
             }
             return node_t(c.begin(), c.end());
@@ -519,9 +514,6 @@ namespace impl {
     // as Koenig lookup rules will find only the classname::swap
     // member function not the global declaration, so use cp_swap
     // as a forwarding function (JM):
-#if __GNUC__ == 2
-    using ::std::swap;
-#endif
     template <typename T>
     inline void cp_swap(T& t1, T& t2)
     {
@@ -555,18 +547,18 @@ public:
     {}
 
     explicit
-    tree_match(std::size_t length)
-    : match<T>(length), trees()
+    tree_match(std::size_t length_)
+    : match<T>(length_), trees()
     {}
 
-    tree_match(std::size_t length, parse_node_t const& n)
-    : match<T>(length), trees()
+    tree_match(std::size_t length_, parse_node_t const& n)
+    : match<T>(length_), trees()
     { 
         trees.push_back(node_t(n)); 
     }
 
-    tree_match(std::size_t length, param_type val, parse_node_t const& n)
-    : match<T>(length, val), trees()
+    tree_match(std::size_t length_, param_type val, parse_node_t const& n)
+    : match<T>(length_, val), trees()
     {
 #if !defined(BOOST_SPIRIT_USE_LIST_FOR_TREES)
         trees.reserve(10); // this is more or less an arbitrary number...
@@ -575,14 +567,14 @@ public:
     }
 
     // attention, these constructors will change the second parameter!
-    tree_match(std::size_t length, container_t& c)
-    : match<T>(length), trees()
+    tree_match(std::size_t length_, container_t& c)
+    : match<T>(length_), trees()
     { 
         impl::cp_swap(trees, c);
     }
 
-    tree_match(std::size_t length, param_type val, container_t& c)
-    : match<T>(length, val), trees()
+    tree_match(std::size_t length_, param_type val, container_t& c)
+    : match<T>(length_, val), trees()
     {
         impl::cp_swap(trees, c);
     }
@@ -1516,7 +1508,7 @@ const action_directive_parser_gen<access_node_action> access_node_d
 //      length: The number of characters consumed by the parser.
 //              This is valid only if we have a successful match
 //              (either partial or full). A negative value means
-//              that the match is unsucessful.
+//              that the match is unsuccessful.
 //
 //     trees:   Contains the root node(s) of the tree.
 //

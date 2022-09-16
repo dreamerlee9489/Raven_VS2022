@@ -9,10 +9,17 @@
 #if !defined(BOOST_FUSION_FUNCTIONAL_ADAPTER_FUSED_HPP_INCLUDED)
 #define BOOST_FUSION_FUNCTIONAL_ADAPTER_FUSED_HPP_INCLUDED
 
+#include <boost/fusion/support/config.hpp>
 #include <boost/type_traits/add_reference.hpp>
+#include <boost/config.hpp>
 
 #include <boost/fusion/functional/adapter/detail/access.hpp>
 #include <boost/fusion/functional/invocation/invoke.hpp>
+
+#if defined (BOOST_MSVC)
+#  pragma warning(push)
+#  pragma warning (disable: 4512) // assignment operator could not be generated.
+#endif
 
 namespace boost { namespace fusion
 {
@@ -30,11 +37,13 @@ namespace boost { namespace fusion
 
     public:
 
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
         inline explicit fused(func_const_fwd_t f = Function())
             : fnc_transformed(f)
         { }
 
         template <class Seq> 
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
         inline typename result_of::invoke<func_const_fwd_t,Seq const>::type 
         operator()(Seq const & s) const
         {
@@ -42,6 +51,7 @@ namespace boost { namespace fusion
         }
 
         template <class Seq> 
+        BOOST_CXX14_CONSTEXPR BOOST_FUSION_GPU_ENABLED
         inline typename result_of::invoke<func_fwd_t,Seq const>::type 
         operator()(Seq const & s) 
         {
@@ -49,6 +59,7 @@ namespace boost { namespace fusion
         }
 
         template <class Seq> 
+        BOOST_CONSTEXPR BOOST_FUSION_GPU_ENABLED
         inline typename result_of::invoke<func_const_fwd_t,Seq>::type 
         operator()(Seq & s) const
         {
@@ -56,6 +67,7 @@ namespace boost { namespace fusion
         }
 
         template <class Seq> 
+        BOOST_CXX14_CONSTEXPR BOOST_FUSION_GPU_ENABLED
         inline typename result_of::invoke<func_fwd_t,Seq>::type 
         operator()(Seq & s) 
         {
@@ -80,6 +92,10 @@ namespace boost { namespace fusion
     };
 
 }}
+
+#if defined (BOOST_MSVC)
+#  pragma warning(pop)
+#endif
 
 #endif
 

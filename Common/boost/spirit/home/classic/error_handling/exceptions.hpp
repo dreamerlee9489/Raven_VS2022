@@ -34,12 +34,12 @@ BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
     //      to allow a single catch handler to catch all exceptions.
     //
     ///////////////////////////////////////////////////////////////////////////
-    class parser_error_base : public std::exception
+    class BOOST_SYMBOL_VISIBLE parser_error_base : public std::exception
     {
     protected:
 
         parser_error_base() {}
-        virtual ~parser_error_base() throw() {}
+        virtual ~parser_error_base() BOOST_NOEXCEPT_OR_NOTHROW {}
 
     public:
 
@@ -87,10 +87,10 @@ BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
         }
 
         virtual
-        ~parser_error() throw() {}
+        ~parser_error() BOOST_NOEXCEPT_OR_NOTHROW {}
 
         virtual const char*
-        what() const throw()
+        what() const BOOST_NOEXCEPT_OR_NOTHROW
         {
             return "BOOST_SPIRIT_CLASSIC_NS::parser_error";
         }
@@ -126,8 +126,8 @@ BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
         typedef unary<ParserT, parser<self_t> >         base_t;
         typedef unary_parser_category                   parser_category_t;
 
-        assertive_parser(ParserT const& parser, ErrorDescrT descriptor)
-        : base_t(parser), descriptor(descriptor) {}
+        assertive_parser(ParserT const& parser, ErrorDescrT descriptor_)
+        : base_t(parser), descriptor(descriptor_) {}
 
         template <typename ScannerT>
         struct result
@@ -140,7 +140,6 @@ BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
         parse(ScannerT const& scan) const
         {
             typedef typename parser_result<ParserT, ScannerT>::type result_t;
-            typedef typename ScannerT::iterator_t iterator_t;
 
             result_t hit = this->subject().parse(scan);
             if (!hit)
@@ -222,9 +221,9 @@ BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
 
         error_status(
             result_t result_ = fail,
-            std::ptrdiff_t length = -1,
+            std::ptrdiff_t length_ = -1,
             T const& value_ = T())
-        : result(result_), length(length), value(value_) {}
+        : result(result_), length(length_), value(value_) {}
 
         result_t        result;
         std::ptrdiff_t  length;

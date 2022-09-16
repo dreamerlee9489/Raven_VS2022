@@ -29,6 +29,7 @@
 
 #include <boost/graph/graph_traits.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <boost/property_map/parallel/parallel_property_maps.hpp>
 #include <vector>
 #include <boost/graph/parallel/algorithm.hpp>
 #include <boost/limits.hpp>
@@ -561,7 +562,7 @@ dense_boruvka_minimum_spanning_tree(const Graph& g, WeightMap weight_map,
   // Initialize the disjoint sets structures
   disjoint_sets<RankMap, ParentMap> dset(rank_map, parent_map);
   vertex_iterator vi, vi_end;
-  for (tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi)
+  for (boost::tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi)
     dset.make_set(*vi);
 
   std::vector<vertex_descriptor> supervertices;
@@ -642,7 +643,6 @@ merge_local_minimum_spanning_trees(const Graph& g, WeightMap weight,
   BOOST_STATIC_ASSERT((is_convertible<traversal_category*,
                                       vertex_list_graph_tag*>::value));
 
-  typedef typename graph_traits<Graph>::vertex_descriptor vertex_descriptor;
   typedef typename graph_traits<Graph>::edge_descriptor edge_descriptor;
 
   // Don't throw away cached edge weights
@@ -728,7 +728,7 @@ boruvka_then_merge(const Graph& g, WeightMap weight, OutputIterator out,
   // Initialize the disjoint sets structures for Boruvka steps
   disjoint_sets<RankMap, ParentMap> dset(rank_map, parent_map);
   vertex_iterator vi, vi_end;
-  for (tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi)
+  for (boost::tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi)
     dset.make_set(*vi);
 
   // Construct the initial set of supervertices (all vertices)
@@ -836,7 +836,7 @@ boruvka_mixed_merge(const Graph& g, WeightMap weight, OutputIterator out,
   // Initialize the disjoint sets structures for Boruvka steps
   disjoint_sets<RankMap, ParentMap> dset(rank_map, parent_map);
   vertex_iterator vi, vi_end;
-  for (tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi)
+  for (boost::tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi)
     dset.make_set(*vi);
 
   // Construct the initial set of supervertices (all vertices)

@@ -9,7 +9,7 @@
 #define BOOST_XPRESSIVE_DETAIL_UTILITY_ALGORITHM_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -58,11 +58,11 @@ FwdIter find_nth_if(FwdIter begin, FwdIter end, Diff count, Pred pred)
 // toi
 //
 template<typename InIter, typename Traits>
-int toi(InIter &begin, InIter end, Traits const &traits, int radix = 10, int max = INT_MAX)
+int toi(InIter &begin, InIter end, Traits const &tr, int radix = 10, int max = INT_MAX)
 {
-    detail::ignore_unused(traits);
+    detail::ignore_unused(tr);
     int i = 0, c = 0;
-    for(; begin != end && -1 != (c = traits.value(*begin, radix)); ++begin)
+    for(; begin != end && -1 != (c = tr.value(*begin, radix)); ++begin)
     {
         if(max < ((i *= radix) += c))
             return i / radix;

@@ -11,7 +11,7 @@
 #define BOOST_XPRESSIVE_REGEX_TOKEN_ITERATOR_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -93,14 +93,14 @@ inline int get_mark_number(int i)
     return i;
 }
 
-inline std::vector<int> to_vector(int sub_match)
+inline std::vector<int> to_vector(int subs)
 {
-    return std::vector<int>(1, sub_match);
+    return std::vector<int>(1, subs);
 }
 
-inline std::vector<int> const &to_vector(std::vector<int> const &sub_matches)
+inline std::vector<int> const &to_vector(std::vector<int> const &subs)
 {
-    return sub_matches;
+    return subs;
 }
 
 template<typename Int, std::size_t Size>
@@ -194,6 +194,7 @@ struct regex_token_iterator
     /// \param begin The beginning of the character range to search.
     /// \param end The end of the character range to search.
     /// \param rex The regex pattern to search for.
+    /// \param subs A range of integers designating sub-matches to be treated as tokens.
     /// \param flags Optional match flags, used to control how the expression is matched against the sequence. (See match_flag_type.)
     /// \pre \c [begin,end) is a valid range.
     /// \pre \c subs is either an integer greater or equal to -1,
@@ -219,6 +220,7 @@ struct regex_token_iterator
     /// \param begin The beginning of the character range to search.
     /// \param end The end of the character range to search.
     /// \param rex The regex pattern to search for.
+    /// \param subs A range of integers designating sub-matches to be treated as tokens.
     /// \param args A let() expression with argument bindings for semantic actions.
     /// \param flags Optional match flags, used to control how the expression is matched against the sequence. (See match_flag_type.)
     /// \pre \c [begin,end) is a valid range.

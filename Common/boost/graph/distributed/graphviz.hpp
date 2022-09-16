@@ -16,6 +16,7 @@
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/distributed/concepts.hpp>
 #include <boost/property_map/property_map.hpp>
+#include <boost/property_map/parallel/parallel_property_maps.hpp>
 #include <boost/graph/graphviz.hpp>
 #include <boost/type_traits/is_base_and_derived.hpp>
 #include <boost/type_traits/is_same.hpp>
@@ -106,10 +107,8 @@ write_graphviz(std::ostream& out,
                BOOST_GRAPH_ENABLE_IF_MODELS_PARM(Graph,distributed_graph_tag))
 {
   typedef typename graph_traits<Graph>::directed_category directed_category;
-  typedef typename graph_traits<Graph>::vertices_size_type vertices_size_type;
   typedef typename boost::graph::parallel::process_group_type<Graph>::type 
     process_group_type;
-  typedef typename process_group_type::process_id_type process_id_type;
   typedef typename property_map<Graph, vertex_index_t>::const_type
     VertexIndexMap;
   typedef typename property_map<Graph, vertex_global_t>::const_type
@@ -134,7 +133,7 @@ write_graphviz(std::ostream& out,
   gpw(local_graph_out);
 
   typename graph_traits<Graph>::vertex_iterator vi, vi_end;
-  for (tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi) {
+  for (boost::tie(vi, vi_end) = vertices(g); vi != vi_end; ++vi) {
 
     int global_idx = get(global_index, *vi);
     local_graph_out << "    n" << global_idx;
@@ -145,7 +144,7 @@ write_graphviz(std::ostream& out,
 
   
   typename graph_traits<Graph>::edge_iterator ei, ei_end;
-  for (tie(ei, ei_end) = edges(g); ei != ei_end; ++ei) {
+  for (boost::tie(ei, ei_end) = edges(g); ei != ei_end; ++ei) {
     int source_idx = get(global_index, source(*ei, g));
     int target_idx = get(global_index, target(*ei, g));
     local_graph_out << "  n" << source_idx << " " << edge_kind << " n" 

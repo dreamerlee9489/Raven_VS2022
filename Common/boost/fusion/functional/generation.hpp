@@ -9,11 +9,10 @@
 #if !defined(BOOST_FUSION_FUNCTIONAL_GENERATION_HPP_INCLUDED)
 #define BOOST_FUSION_FUNCTIONAL_GENERATION_HPP_INCLUDED
 
+#include <boost/fusion/support/config.hpp>
 #include <boost/fusion/functional/generation/make_fused.hpp>
 #include <boost/fusion/functional/generation/make_fused_procedure.hpp>
 #include <boost/fusion/functional/generation/make_fused_function_object.hpp>
-#include <boost/fusion/functional/generation/make_unfused_generic.hpp>
-#include <boost/fusion/functional/generation/make_unfused_lvalue_args.hpp>
-#include <boost/fusion/functional/generation/make_unfused_rvalue_args.hpp>
+#include <boost/fusion/functional/generation/make_unfused.hpp>
 
 #endif

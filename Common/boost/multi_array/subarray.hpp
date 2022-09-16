@@ -10,8 +10,8 @@
 //           Andrew Lumsdaine
 //  See http://www.boost.org/libs/multi_array for documentation.
 
-#ifndef SUBARRAY_RG071801_HPP
-#define SUBARRAY_RG071801_HPP
+#ifndef BOOST_MULTI_ARRAY_SUBARRAY_HPP
+#define BOOST_MULTI_ARRAY_SUBARRAY_HPP
 
 //
 // subarray.hpp - used to implement standard operator[] on
@@ -80,18 +80,14 @@ public:
   template <typename IndexList>
   const element& operator()(const IndexList& indices) const {
     boost::function_requires<
-      detail::multi_array::CollectionConcept<IndexList> >();
+      CollectionConcept<IndexList> >();
     return super_type::access_element(boost::type<const element&>(),
                                       indices,origin(),
                                       shape(),strides(),index_bases());
   }
 
   // see generate_array_view in base.hpp
-#if !defined(BOOST_MSVC) || BOOST_MSVC > 1300
   template <int NDims>
-#else
-  template <int NumDims, int NDims> // else ICE
-#endif // BOOST_MSVC
   typename const_array_view<NDims>::type 
   operator[](const boost::detail::multi_array::
              index_gen<NumDims,NDims>& indices)
@@ -231,7 +227,7 @@ public:
   // Assignment from other ConstMultiArray types.
   template <typename ConstMultiArray>
   sub_array& operator=(const ConstMultiArray& other) {
-    function_requires< boost::detail::multi_array::ConstMultiArrayConcept< 
+    function_requires< boost::multi_array_concepts::ConstMultiArrayConcept< 
         ConstMultiArray, NumDims> >();
 
     // make sure the dimensions agree
@@ -267,11 +263,7 @@ public:
   }
 
   // see generate_array_view in base.hpp
-#if !defined(BOOST_MSVC) || BOOST_MSVC > 1300
   template <int NDims>
-#else
-  template <int NumDims, int NDims> // else ICE
-#endif // BOOST_MSVC
   typename array_view<NDims>::type 
   operator[](const boost::detail::multi_array::
              index_gen<NumDims,NDims>& indices) {
@@ -288,7 +280,7 @@ public:
   template <class IndexList>
   element& operator()(const IndexList& indices) {
     boost::function_requires<
-      detail::multi_array::CollectionConcept<IndexList> >();
+      CollectionConcept<IndexList> >();
     return super_type::access_element(boost::type<element&>(),
                                       indices,origin(),
                                       this->shape(),this->strides(),
@@ -323,7 +315,7 @@ public:
   template <class IndexList>
   const element& operator()(const IndexList& indices) const {
     boost::function_requires<
-      detail::multi_array::CollectionConcept<IndexList> >();
+      CollectionConcept<IndexList> >();
     return super_type::operator()(indices);
   }
 
@@ -332,11 +324,7 @@ public:
   }
 
   // see generate_array_view in base.hpp
-#if !defined(BOOST_MSVC) || BOOST_MSVC > 1300
   template <int NDims>
-#else
-  template <int NumDims, int NDims> // else ICE
-#endif // BOOST_MSVC
   typename const_array_view<NDims>::type 
   operator[](const boost::detail::multi_array::
              index_gen<NumDims,NDims>& indices)
@@ -396,4 +384,4 @@ public:
 };
 } // namespace boost
   
-#endif // SUBARRAY_RG071801_HPP
+#endif

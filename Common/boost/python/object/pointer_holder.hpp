@@ -21,6 +21,7 @@
 #  include <boost/python/detail/wrapper_base.hpp>
 #  include <boost/python/detail/force_instantiate.hpp>
 #  include <boost/python/detail/preprocessor.hpp>
+# include <boost/python/detail/type_traits.hpp>
 
 
 #  include <boost/mpl/if.hpp>
@@ -44,11 +45,7 @@ template <class T> class wrapper;
 
 namespace boost { namespace python { namespace objects {
 
-#  if BOOST_WORKAROUND(__GNUC__, == 2)
-#   define BOOST_PYTHON_UNFORWARD_LOCAL(z, n, _) BOOST_PP_COMMA_IF(n) (typename unforward<A##n>::type)objects::do_unforward(a##n,0)
-#  else
-#   define BOOST_PYTHON_UNFORWARD_LOCAL(z, n, _) BOOST_PP_COMMA_IF(n) objects::do_unforward(a##n,0)
-#  endif 
+#define BOOST_PYTHON_UNFORWARD_LOCAL(z, n, _) BOOST_PP_COMMA_IF(n) objects::do_unforward(a##n,0)
 
 template <class Pointer, class Value>
 struct pointer_holder : instance_holder
@@ -109,39 +106,50 @@ struct pointer_holder_back_reference : instance_holder
 
 template <class Pointer, class Value>
 inline pointer_holder<Pointer,Value>::pointer_holder(Pointer p)
+#if defined(BOOST_NO_CXX11_SMART_PTR)
     : m_p(p)
+#else
+    : m_p(std::move(p))
+#endif
 {
 }
 
 template <class Pointer, class Value>
 inline pointer_holder_back_reference<Pointer,Value>::pointer_holder_back_reference(Pointer p)
+#if defined(BOOST_NO_CXX11_SMART_PTR)
     : m_p(p)
+#else
+    : m_p(std::move(p))
+#endif
 {
 }
 
 template <class Pointer, class Value>
 void* pointer_holder<Pointer, Value>::holds(type_info dst_t, bool null_ptr_only)
 {
+    typedef typename boost::python::detail::remove_const< Value >::type non_const_value;
+
     if (dst_t == python::type_id<Pointer>()
         && !(null_ptr_only && get_pointer(this->m_p))
     )
         return &this->m_p;
 
-    Value* p
+    Value* p0
 #  if BOOST_WORKAROUND(__SUNPRO_CC, BOOST_TESTED_AT(0x590))
         = static_cast<Value*>( get_pointer(this->m_p) )
 #  else 
         = get_pointer(this->m_p)
 #  endif
         ;
-    
+    non_const_value* p = const_cast<non_const_value*>( p0 );
+
     if (p == 0)
         return 0;
     
     if (void* wrapped = holds_wrapped(dst_t, p, p))
         return wrapped;
     
-    type_info src_t = python::type_id<Value>();
+    type_info src_t = python::type_id<non_const_value>();
     return src_t == dst_t ? p : find_dynamic_type(p, src_t, dst_t);
 }
 

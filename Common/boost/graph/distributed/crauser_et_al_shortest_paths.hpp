@@ -30,13 +30,14 @@
 #error "Parallel BGL files should not be included unless <boost/graph/use_mpi.hpp> has been included"
 #endif
 
+#include <boost/assert.hpp>
 #include <boost/graph/distributed/detail/dijkstra_shortest_paths.hpp>
 #include <boost/graph/parallel/algorithm.hpp>
 #include <functional>
 #include <boost/graph/iteration_macros.hpp>
 #include <boost/property_map/property_map_iterator.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <algorithm>
+#include <boost/algorithm/minmax_element.hpp>
 #include <boost/property_map/parallel/caching_property_map.hpp>
 #include <boost/pending/indirect_cmp.hpp>
 #include <boost/graph/distributed/detail/remote_update_set.hpp>
@@ -44,6 +45,7 @@
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/graph/parallel/container_traits.hpp>
+#include <boost/pending/relaxed_heap.hpp>
 
 #ifdef PBGL_ACCOUNTING
 #  include <boost/graph/accounting.hpp>
@@ -94,8 +96,10 @@ namespace detail {
   template<typename Vertex, typename DistanceMap, typename MinInWeightMap,
            typename Combine, typename Compare>
   struct min_in_distance_compare
-    : std::binary_function<Vertex, Vertex, bool>
   {
+    typedef Vertex first_argument_type;
+    typedef Vertex second_argument_type;
+    typedef bool result_type;
     min_in_distance_compare(DistanceMap d, MinInWeightMap m,
                             Combine combine, Compare compare)
       : distance_map(d), min_in_weight(m), combine(combine),
@@ -119,8 +123,10 @@ namespace detail {
   template<typename Vertex, typename DistanceMap, typename MinOutWeightMap,
            typename Combine, typename Compare>
   struct min_out_distance_compare
-    : std::binary_function<Vertex, Vertex, bool>
   {
+    typedef Vertex first_argument_type;
+    typedef Vertex second_argument_type;
+    typedef bool result_type;
     min_out_distance_compare(DistanceMap d, MinOutWeightMap m,
                              Combine combine, Compare compare)
       : distance_map(d), min_out_weight(m), combine(combine),
@@ -330,7 +336,7 @@ namespace detail {
         crauser_et_al_shortest_paths_stats.deleted_vertices.push_back(deletions);
       }
       local_deletions = 0;
-      assert(deletions > 0);
+      BOOST_ASSERT(deletions > 0);
 #endif
 
       return min_distance == (std::numeric_limits<distance_type>::max)();
@@ -470,7 +476,7 @@ namespace detail {
         }
         std::cerr << std::endl;
         put(min_in_weight, v,
-            *std::min_element
+            *boost::first_min_element
             (make_property_map_iterator(weight, in_edges(v, g).first),
              make_property_map_iterator(weight, in_edges(v, g).second),
              compare));
@@ -512,7 +518,7 @@ namespace detail {
     BGL_FORALL_VERTICES_T(v, g, Graph) {
       if (out_edges(v, g).first != out_edges(v, g).second) {
         put(min_out_weight, v,
-            *std::min_element
+            *boost::first_min_element
             (make_property_map_iterator(weight, out_edges(v, g).first),
              make_property_map_iterator(weight, out_edges(v, g).second),
              compare));
@@ -539,13 +545,6 @@ crauser_et_al_shortest_paths
    Compare compare, Combine combine, DistInf inf, DistZero zero,
    DijkstraVisitor vis)
 {
-  typedef typename boost::graph::parallel::process_group_type<DistributedGraph>::type
-    process_group_type;
-  typedef typename process_group_type::process_id_type process_id_type;
-  typedef typename graph_traits<DistributedGraph>::vertex_descriptor
-    Vertex;
-  typedef typename graph_traits<DistributedGraph>::vertices_size_type
-    vertices_size_type;
 
 #ifdef PBGL_ACCOUNTING
   crauser_et_al_shortest_paths_stats.deleted_vertices.clear();
@@ -579,7 +578,7 @@ crauser_et_al_shortest_paths
 
   // Initialize local portion of property maps
   typename graph_traits<DistributedGraph>::vertex_iterator ui, ui_end;
-  for (tie(ui, ui_end) = vertices(g); ui != ui_end; ++ui) {
+  for (boost::tie(ui, ui_end) = vertices(g); ui != ui_end; ++ui) {
     put(distance, *ui, inf);
     put(predecessor, *ui, *ui);
   }

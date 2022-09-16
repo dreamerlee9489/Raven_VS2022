@@ -37,21 +37,14 @@ public:
 
         /// don't do anything when loading arrays
     template<class T>
-    void load_array(serialization::array<T> &, unsigned int )
+    void load_array(serialization::array_wrapper<T> &, unsigned int )
     {}
 
     typedef is_mpi_datatype<mpl::_1> use_array_optimization;
 
-#ifndef BOOST_NO_MEMBER_TEMPLATE_FRIENDS
-    friend class archive::load_access;
-protected:
-#else
-public:
-#endif
-
         /// don't do anything when loading primitive types
     template<class T>
-    void load(T & t)
+    void load(T &)
     {
     }
 };

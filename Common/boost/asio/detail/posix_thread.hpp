@@ -1,8 +1,8 @@
 //
-// posix_thread.hpp
-// ~~~~~~~~~~~~~~~~
+// detail/posix_thread.hpp
+// ~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2008 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2022 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -15,29 +15,24 @@
 # pragma once
 #endif // defined(_MSC_VER) && (_MSC_VER >= 1200)
 
-#include <boost/asio/detail/push_options.hpp>
+#include <boost/asio/detail/config.hpp>
 
-#include <boost/asio/detail/push_options.hpp>
-#include <boost/config.hpp>
-#include <boost/system/system_error.hpp>
-#include <boost/asio/detail/pop_options.hpp>
+#if defined(BOOST_ASIO_HAS_PTHREADS)
 
-#if defined(BOOST_HAS_PTHREADS)
-
-#include <boost/asio/detail/push_options.hpp>
-#include <memory>
-#include <boost/throw_exception.hpp>
+#include <cstddef>
 #include <pthread.h>
-#include <boost/asio/detail/pop_options.hpp>
-
-#include <boost/asio/error.hpp>
 #include <boost/asio/detail/noncopyable.hpp>
+
+#include <boost/asio/detail/push_options.hpp>
 
 namespace boost {
 namespace asio {
 namespace detail {
 
-extern "C" void* asio_detail_posix_thread_function(void* arg);
+extern "C"
+{
+  BOOST_ASIO_DECL void* boost_asio_detail_posix_thread_function(void* arg);
+}
 
 class posix_thread
   : private noncopyable
@@ -45,48 +40,35 @@ class posix_thread
 public:
   // Constructor.
   template <typename Function>
-  posix_thread(Function f)
+  posix_thread(Function f, unsigned int = 0)
     : joined_(false)
   {
-    std::auto_ptr<func_base> arg(new func<Function>(f));
-    int error = ::pthread_create(&thread_, 0,
-          asio_detail_posix_thread_function, arg.get());
-    if (error != 0)
-    {
-      boost::system::system_error e(
-          boost::system::error_code(error,
-            boost::asio::error::get_system_category()),
-          "thread");
-      boost::throw_exception(e);
-    }
-    arg.release();
+    start_thread(new func<Function>(f));
   }
 
   // Destructor.
-  ~posix_thread()
-  {
-    if (!joined_)
-      ::pthread_detach(thread_);
-  }
+  BOOST_ASIO_DECL ~posix_thread();
 
   // Wait for the thread to exit.
-  void join()
-  {
-    if (!joined_)
-    {
-      ::pthread_join(thread_, 0);
-      joined_ = true;
-    }
-  }
+  BOOST_ASIO_DECL void join();
+
+  // Get number of CPUs.
+  BOOST_ASIO_DECL static std::size_t hardware_concurrency();
 
 private:
-  friend void* asio_detail_posix_thread_function(void* arg);
+  friend void* boost_asio_detail_posix_thread_function(void* arg);
 
   class func_base
   {
   public:
     virtual ~func_base() {}
     virtual void run() = 0;
+  };
+
+  struct auto_func_base_ptr
+  {
+    func_base* ptr;
+    ~auto_func_base_ptr() { delete ptr; }
   };
 
   template <typename Function>
@@ -108,24 +90,22 @@ private:
     Function f_;
   };
 
+  BOOST_ASIO_DECL void start_thread(func_base* arg);
+
   ::pthread_t thread_;
   bool joined_;
 };
-
-inline void* asio_detail_posix_thread_function(void* arg)
-{
-  std::auto_ptr<posix_thread::func_base> f(
-      static_cast<posix_thread::func_base*>(arg));
-  f->run();
-  return 0;
-}
 
 } // namespace detail
 } // namespace asio
 } // namespace boost
 
-#endif // defined(BOOST_HAS_PTHREADS)
-
 #include <boost/asio/detail/pop_options.hpp>
+
+#if defined(BOOST_ASIO_HEADER_ONLY)
+# include <boost/asio/detail/impl/posix_thread.ipp>
+#endif // defined(BOOST_ASIO_HEADER_ONLY)
+
+#endif // defined(BOOST_ASIO_HAS_PTHREADS)
 
 #endif // BOOST_ASIO_DETAIL_POSIX_THREAD_HPP

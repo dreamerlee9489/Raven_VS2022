@@ -10,7 +10,7 @@
 #define BOOST_XPRESSIVE_ALGORITHMS_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -95,7 +95,7 @@ namespace detail
 /// \param flags Optional match flags, used to control how the expression is matched
 ///        against the sequence. (See \c match_flag_type.)
 /// \return \c true if a match is found, \c false otherwise
-/// \throw \c regex_error on stack exhaustion
+/// \throw regex_error on stack exhaustion
 template<typename BidiIter>
 inline bool regex_match
 (
@@ -303,7 +303,6 @@ namespace detail
     )
     {
         typedef core_access<BidiIter> access;
-        typedef typename iterator_value<BidiIter>::type char_type;
         match_results<BidiIter> &what = *state.context_.results_ptr_;
         BOOST_ASSERT(0 != re.regex_id());
 
@@ -417,7 +416,7 @@ namespace detail
 /// \param flags Optional match flags, used to control how the expression is matched against
 ///        the sequence. (See \c match_flag_type.)
 /// \return \c true if a match is found, \c false otherwise
-/// \throw \c regex_error on stack exhaustion
+/// \throw regex_error on stack exhaustion
 template<typename BidiIter>
 inline bool regex_search
 (
@@ -746,7 +745,7 @@ namespace detail
 /// \param flags Optional match flags, used to control how the expression is matched against
 ///        the sequence. (See \c match_flag_type.)
 /// \return The value of the output iterator after the output sequence has been written to it.
-/// \throw \c regex_error on stack exhaustion or invalid format string.
+/// \throw regex_error on stack exhaustion or invalid format string.
 template<typename OutIter, typename BidiIter, typename Formatter>
 inline OutIter regex_replace
 (

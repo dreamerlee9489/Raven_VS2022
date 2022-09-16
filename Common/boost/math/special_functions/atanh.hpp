@@ -15,13 +15,12 @@
 #pragma once
 #endif
 
-
-#include <boost/config/no_tr1/cmath.hpp>
-#include <boost/config.hpp>
+#include <cmath>
 #include <boost/math/tools/precision.hpp>
 #include <boost/math/policies/error_handling.hpp>
 #include <boost/math/special_functions/math_fwd.hpp>
 #include <boost/math/special_functions/log1p.hpp>
+#include <boost/math/special_functions/fpclassify.hpp>
 
 // This is the inverse of the hyperbolic tangent function.
 
@@ -31,17 +30,6 @@ namespace boost
     {
        namespace detail
        {
-#if defined(__GNUC__) && (__GNUC__ < 3)
-        // gcc 2.x ignores function scope using declarations,
-        // put them in the scope of the enclosing namespace instead:
-        
-        using    ::std::abs;
-        using    ::std::sqrt;
-        using    ::std::log;
-        
-        using    ::std::numeric_limits;
-#endif
-        
         // This is the main fare
         
         template<typename T, typename Policy>
@@ -56,6 +44,18 @@ namespace boost
                   function,
                   "atanh requires x >= -1, but got x = %1%.", x, pol);
             }
+            else if(x > 1)
+            {
+               return policies::raise_domain_error<T>(
+                  function,
+                  "atanh requires x <= 1, but got x = %1%.", x, pol);
+            }
+            else if((boost::math::isnan)(x))
+            {
+               return policies::raise_domain_error<T>(
+                  function,
+                  "atanh requires -1 <= x <= 1, but got x = %1%.", x, pol);
+            }
             else if(x < -1 + tools::epsilon<T>())
             {
                // -Infinity:
@@ -64,13 +64,7 @@ namespace boost
             else if(x > 1 - tools::epsilon<T>())
             {
                // Infinity:
-               return -policies::raise_overflow_error<T>(function, 0, pol);
-            }
-            else if(x > 1)
-            {
-               return policies::raise_domain_error<T>(
-                  function,
-                  "atanh requires x <= 1, but got x = %1%.", x, pol);
+               return policies::raise_overflow_error<T>(function, 0, pol);
             }
             else if(abs(x) >= tools::forth_root_epsilon<T>())
             {

@@ -18,9 +18,11 @@
 #include <vector>
 #include <algorithm>
 #include <numeric>
+#include <boost/assert.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 #include <boost/random/uniform_int.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/config.hpp>
 #include <typeinfo>
 
 namespace boost { namespace parallel {
@@ -194,7 +196,7 @@ struct uneven_block
   explicit uneven_block(const LinearProcessGroup& pg, const std::vector<std::size_t>& local_sizes) 
     : id(process_id(pg)), p(num_processes(pg)), local_sizes(local_sizes)
   { 
-    assert(local_sizes.size() == p);
+    BOOST_ASSERT(local_sizes.size() == p);
     local_starts.resize(p + 1);
     local_starts[0] = 0;
     std::partial_sum(local_sizes.begin(), local_sizes.end(), &local_starts[1]);
@@ -219,7 +221,7 @@ struct uneven_block
   template<typename SizeType>
   SizeType operator()(SizeType i) const
   {
-    assert (i >= (SizeType) 0 && i < (SizeType) n); // check for valid range
+    BOOST_ASSERT (i >= (SizeType) 0 && i < (SizeType) n); // check for valid range
     size_vector::const_iterator lb = std::lower_bound(local_starts.begin(), local_starts.end(), (std::size_t) i);
     return ((SizeType)(*lb) == i ? lb : --lb) - local_starts.begin();
   }
@@ -402,7 +404,7 @@ struct twod_block_cyclic
 
     std::cerr << "global(" << i << "@" << id << ") = " << result 
               << " =? " << local(result) << std::endl;
-    assert(i == local(result));
+    BOOST_ASSERT(i == local(result));
     return result;
   }
 
@@ -460,8 +462,12 @@ class twod_random
               make_counting_iterator(global_to_local.size()),
               global_to_local.begin());
 
+#if defined(BOOST_NO_CXX98_RANDOM_SHUFFLE)
+    std::shuffle(global_to_local.begin(), global_to_local.end(), gen);
+#else
     random_int<RandomNumberGen> rand(gen);
     std::random_shuffle(global_to_local.begin(), global_to_local.end(), rand);
+#endif
   }
       
   template<typename SizeType>
@@ -562,9 +568,12 @@ class random_distribution
               make_counting_iterator(n),
               local_to_global.begin());
 
+#if defined(BOOST_NO_CXX98_RANDOM_SHUFFLE)
+    std::shuffle(local_to_global.begin(), local_to_global.end(), gen);
+#else
     random_int<RandomNumberGen> rand(gen);
     std::random_shuffle(local_to_global.begin(), local_to_global.end(), rand);
-                        
+#endif
 
     for (std::vector<std::size_t>::size_type i = 0; i < n; ++i)
       global_to_local[local_to_global[i]] = i;

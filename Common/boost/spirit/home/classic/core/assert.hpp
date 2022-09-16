@@ -9,29 +9,27 @@
 #if !defined(BOOST_SPIRIT_ASSERT_HPP)
 #define BOOST_SPIRIT_ASSERT_HPP
 
-#include <boost/config.hpp>
-#include <boost/throw_exception.hpp>
-
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  BOOST_SPIRIT_ASSERT is used throughout the framework.  It can be
 //  overridden by the user. If BOOST_SPIRIT_ASSERT_EXCEPTION is defined,
 //  then that will be thrown, otherwise, BOOST_SPIRIT_ASSERT simply turns
-//  into a plain assert()
+//  into a plain BOOST_ASSERT()
 //
 ///////////////////////////////////////////////////////////////////////////////
 #if !defined(BOOST_SPIRIT_ASSERT)
 #if defined(NDEBUG)
     #define BOOST_SPIRIT_ASSERT(x)
 #elif defined (BOOST_SPIRIT_ASSERT_EXCEPTION)
+    #include <boost/throw_exception.hpp>
     #define BOOST_SPIRIT_ASSERT_AUX(f, l, x) BOOST_SPIRIT_ASSERT_AUX2(f, l, x)
     #define BOOST_SPIRIT_ASSERT_AUX2(f, l, x)                                   \
-    do{ if (!(x)) boost::throw_exception(                                       \
-        BOOST_SPIRIT_ASSERT_EXCEPTION(f "(" #l "): " #x)); } while(0)
+    ( (x) ? (void)0 : boost::throw_exception(                                   \
+        BOOST_SPIRIT_ASSERT_EXCEPTION(f "(" #l "): " #x)) )
     #define BOOST_SPIRIT_ASSERT(x) BOOST_SPIRIT_ASSERT_AUX(__FILE__, __LINE__, x)
 #else
-    #include <cassert>
-    #define BOOST_SPIRIT_ASSERT(x) assert(x)
+    #include <boost/assert.hpp>
+    #define BOOST_SPIRIT_ASSERT(x) BOOST_ASSERT(x)
 #endif
 #endif // !defined(BOOST_SPIRIT_ASSERT)
 

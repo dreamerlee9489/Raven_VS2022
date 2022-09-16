@@ -15,12 +15,13 @@
 #ifndef BOOST_IOSTREAMS_IO_TRAITS_HPP_INCLUDED
 #define BOOST_IOSTREAMS_IO_TRAITS_HPP_INCLUDED
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif              
 
 #include <iosfwd>            // stream types, char_traits.
 #include <boost/config.hpp>  // partial spec, deduced typename.
+#include <boost/detail/workaround.hpp>
 #include <boost/iostreams/categories.hpp>
 #include <boost/iostreams/detail/bool_trait_def.hpp> 
 #include <boost/iostreams/detail/config/wide_streams.hpp>
@@ -34,11 +35,13 @@
 #include <boost/mpl/identity.hpp>      
 #include <boost/mpl/int.hpp>  
 #include <boost/mpl/or.hpp>                 
-#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
-# include <boost/range/iterator_range.hpp>
-# include <boost/range/value_type.hpp>
-#endif // #if BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
-#include <boost/type_traits/is_convertible.hpp>     
+#include <boost/range/iterator_range.hpp>
+#include <boost/range/value_type.hpp>
+#include <boost/ref.hpp>
+#include <boost/type_traits/is_convertible.hpp>
+
+// Must come last.
+#include <boost/iostreams/detail/config/disable_warnings.hpp>
 
 namespace boost { namespace iostreams {
 
@@ -177,7 +180,6 @@ struct member_char_type { typedef typename T::char_type type; };
 
 } // End namespace detail.
 
-#ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION //---------------------------//
 # ifndef BOOST_IOSTREAMS_NO_STREAM_TEMPLATES //-------------------------------//
 
 template<typename T>
@@ -207,27 +209,6 @@ struct char_type_of< iterator_range<Iter> > {
     typedef typename iterator_value<Iter>::type type;
 };
 
-#else // #ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION //------------------//
-
-template<typename T>
-struct char_type_of {
-    template<typename U>
-    struct get_value_type {
-        #if !BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
-            typedef typename range_value<U>::type type;
-        #endif // #if BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
-    };
-    typedef typename 
-            mpl::eval_if<
-                is_iterator_range<T>,
-                get_value_type<T>,
-                detail::member_char_type<
-                    BOOST_DEDUCED_TYPENAME detail::unwrapped_type<T>::type
-                >
-            >::type type;
-};
-
-#endif // #ifndef BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION //-----------------//
 
 //------------------Definitions of category_of--------------------------------//
 
@@ -269,6 +250,14 @@ struct category_of {
             >::type type;
 };
 
+// Partial specialization for reference wrappers
+
+template<typename T>
+struct category_of< reference_wrapper<T> >
+    : category_of<T>
+    { };
+
+
 //------------------Definition of get_category--------------------------------//
 
 // 
@@ -292,7 +281,7 @@ struct int_type_of {
 #endif
 };
 
-//------------------Definition of mode----------------------------------------//
+//------------------Definition of mode_of-------------------------------------//
 
 namespace detail {
 
@@ -323,6 +312,14 @@ struct io_mode_id {
 
 template<typename T> // Borland 5.6.4 requires this circumlocution.
 struct mode_of : detail::io_mode_impl< detail::io_mode_id<T>::value > { };
+
+// Partial specialization for reference wrappers
+
+template<typename T>
+struct mode_of< reference_wrapper<T> >
+    : mode_of<T>
+    { };
+
                     
 //------------------Definition of is_device, is_filter and is_direct----------//
 
@@ -360,5 +357,7 @@ struct is_direct : detail::has_trait<T, direct_tag> { };
     /**/
 
 } } // End namespaces iostreams, boost.
+
+#include <boost/iostreams/detail/config/enable_warnings.hpp>
 
 #endif // #ifndef BOOST_IOSTREAMS_IO_TRAITS_HPP_INCLUDED

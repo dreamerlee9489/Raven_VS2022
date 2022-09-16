@@ -1,10 +1,10 @@
 // ptr_vector.hpp
-// Copyright (c) 2007-2008 Ben Hanson (http://www.benhanson.net/)
+// Copyright (c) 2007-2009 Ben Hanson (http://www.benhanson.net/)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file licence_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef BOOST_LEXER_PTR_VECTOR_HPP
-#define BOOST_LEXER_PTR_VECTOR_HPP
+#ifndef BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_CONTAINERS_PTR_VECTOR_HPP
+#define BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_CONTAINERS_PTR_VECTOR_HPP
 
 #include "../size_t.hpp"
 #include <vector>
@@ -98,8 +98,8 @@ public:
 private:
     vector _vector;
 
-    ptr_vector (ptr_vector const &); // No copy construction.
-    ptr_vector &operator = (ptr_vector const &); // No assignment.
+    ptr_vector (const ptr_vector &); // No copy construction.
+    ptr_vector &operator = (const ptr_vector &); // No assignment.
 };
 }
 }

@@ -17,7 +17,7 @@
 #define BOOST_XPRESSIVE_DETAIL_SYMBOLS_HPP_DRJ_06_11_2007
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -169,7 +169,7 @@ namespace boost { namespace xpressive { namespace detail
         // conditional rotation : the goal is to minimize the overall
         //     weighted path length of each binary search tree
         // 
-        bool const cond_rotation(bool left, node* const i, node* const j) const
+        bool cond_rotation(bool left, node* const i, node* const j) const
         {
             // don't rotate top node in binary search tree
             if (i == j)
@@ -206,8 +206,10 @@ namespace boost { namespace xpressive { namespace detail
         result_type search(BidiIter &begin, BidiIter end, Trans trans, node* p) const
         {
             result_type r = 0;
+            #ifdef BOOST_DISABLE_THREADS
             node* p2 = p;
             bool left = false;
+            #endif
             char_type c1 = (begin != end ? trans(*begin) : 0);
             while(p)
             {
@@ -245,14 +247,18 @@ namespace boost { namespace xpressive { namespace detail
                 }
                 else if(c1 < p->ch)
                 {
+                    #ifdef BOOST_DISABLE_THREADS
                     left = true;
                     p2 = p;
+                    #endif
                     p = p->lo;
                 }
                 else // (c1 > p->ch)
                 {
+                    #ifdef BOOST_DISABLE_THREADS
                     left = false;
                     p2 = p;
+                    #endif
                     p = p->hi;
                 }
             }

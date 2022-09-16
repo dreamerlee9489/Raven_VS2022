@@ -11,7 +11,6 @@
 #ifndef BOOST_UNITS_POW_HPP 
 #define BOOST_UNITS_POW_HPP
 
-#include <boost/math_fwd.hpp>
 #include <boost/type_traits/is_integral.hpp>
 
 #include <boost/units/operators.hpp>
@@ -19,22 +18,24 @@
 #include <boost/units/detail/static_rational_power.hpp>
 
 /// \file 
-/// \brief Raise values to exponents known at compile-time
+/// \brief Raise values to exponents known at compile-time.
 
 namespace boost {
 
 namespace units {
 
-/// raise a value to a @c static_rational power
+/// raise a value to a @c static_rational power.
 template<class Rat,class Y>
+BOOST_CONSTEXPR
 inline typename power_typeof_helper<Y,Rat>::type
 pow(const Y& x)
 {
     return power_typeof_helper<Y,Rat>::value(x);
 }
 
-/// raise a value to an integer power
+/// raise a value to an integer power.
 template<long N,class Y>
+BOOST_CONSTEXPR
 inline typename power_typeof_helper<Y,static_rational<N> >::type
 pow(const Y& x)
 {
@@ -43,7 +44,7 @@ pow(const Y& x)
 
 #ifndef BOOST_UNITS_DOXYGEN
 
-/// raise @c T to a @c static_rational power
+/// raise @c T to a @c static_rational power.
 template<class T, long N,long D> 
 struct power_typeof_helper<T, static_rational<N,D> >                
 { 
@@ -51,20 +52,20 @@ struct power_typeof_helper<T, static_rational<N,D> >
     typedef detail::static_rational_power_impl<static_rational<N, D>, internal_type> impl;
     typedef typename impl::type type; 
     
-    static type value(const T& x)  
+    static BOOST_CONSTEXPR type value(const T& x)  
     {
         return impl::call(x);
     }
 };
 
-/// raise @c float to a @c static_rational power
+/// raise @c float to a @c static_rational power.
 template<long N,long D> 
 struct power_typeof_helper<float, static_rational<N,D> >
 {
-    // N.B.  pathscale doesn't accept inheritence for some reason.
+    // N.B.  pathscale doesn't accept inheritance for some reason.
     typedef power_typeof_helper<double, static_rational<N,D> > base;
     typedef typename base::type type;
-    static type value(const double& x)
+    static BOOST_CONSTEXPR type value(const double& x)
     {
         return base::value(x);
     }
@@ -72,16 +73,18 @@ struct power_typeof_helper<float, static_rational<N,D> >
 
 #endif
 
-/// take the @c static_rational root of a value
+/// take the @c static_rational root of a value.
 template<class Rat,class Y>
+BOOST_CONSTEXPR
 typename root_typeof_helper<Y,Rat>::type
 root(const Y& x)
 {
     return root_typeof_helper<Y,Rat>::value(x);
 }
 
-/// take the integer root of a value
+/// take the integer root of a value.
 template<long N,class Y>
+BOOST_CONSTEXPR
 typename root_typeof_helper<Y,static_rational<N> >::type
 root(const Y& x)
 {
@@ -94,10 +97,10 @@ root(const Y& x)
 template<class T, long N,long D> 
 struct root_typeof_helper<T,static_rational<N,D> >
 {
-    // N.B.  pathscale doesn't accept inheritence for some reason.
+    // N.B.  pathscale doesn't accept inheritance for some reason.
     typedef power_typeof_helper<T, static_rational<D,N> > base;
     typedef typename base::type type;
-    static type value(const T& x)
+    static BOOST_CONSTEXPR type value(const T& x)
     {
         return(base::value(x));
     }

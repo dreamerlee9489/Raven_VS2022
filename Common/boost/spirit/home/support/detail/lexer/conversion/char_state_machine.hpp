@@ -1,10 +1,10 @@
 // char_state_machine.hpp
-// Copyright (c) 2007-2008 Ben Hanson (http://www.benhanson.net/)
+// Copyright (c) 2007-2009 Ben Hanson (http://www.benhanson.net/)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file licence_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-#ifndef BOOST_LEXER_CHAR_STATE_MACHINE_HPP
-#define BOOST_LEXER_CHAR_STATE_MACHINE_HPP
+#ifndef BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_CONVERSION_CHAR_STATE_MACHINE_HPP
+#define BOOST_SPIRIT_SUPPORT_DETAIL_LEXER_CONVERSION_CHAR_STATE_MACHINE_HPP
 
 #include "../consts.hpp"
 #include <map>
@@ -29,6 +29,7 @@ struct basic_char_state_machine
 
         bool _end_state;
         std::size_t _id;
+        std::size_t _unique_id;
         std::size_t _state;
         std::size_t _bol_index;
         std::size_t _eol_index;
@@ -37,6 +38,7 @@ struct basic_char_state_machine
         state () :
             _end_state (false),
             _id (0),
+            _unique_id (npos),
             _state (0),
             _bol_index (npos),
             _eol_index (npos)

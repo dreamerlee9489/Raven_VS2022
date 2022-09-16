@@ -9,7 +9,7 @@
 #define BOOST_XPRESSIVE_DETAIL_CORE_MATCHER_ASSERT_WORD_MATCHER_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -84,8 +84,8 @@ namespace boost { namespace xpressive { namespace detail
         typedef typename Traits::char_type char_type;
         typedef typename Traits::char_class_type char_class_type;
 
-        assert_word_matcher(Traits const &traits)
-          : word_(lookup_classname(traits, "w"))
+        assert_word_matcher(Traits const &tr)
+          : word_(lookup_classname(tr, "w"))
         {
             BOOST_ASSERT(0 != this->word_);
         }
@@ -94,10 +94,10 @@ namespace boost { namespace xpressive { namespace detail
           : word_(word)
         {}
 
-        bool is_word(Traits const &traits, char_type ch) const
+        bool is_word(Traits const &tr, char_type ch) const
         {
-            detail::ignore_unused(traits);
-            return traits.isctype(traits.translate(ch), this->word_);
+            detail::ignore_unused(tr);
+            return tr.isctype(tr.translate(ch), this->word_);
         }
 
         template<typename BidiIter, typename Next>

@@ -11,6 +11,9 @@
 
 #include <boost/config.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/mpl/bool.hpp>
+#include <boost/type_traits/is_same.hpp>
 
 #include <boost/spirit/home/classic/namespace.hpp>
 #include <boost/spirit/home/classic/core/parser.hpp>
@@ -148,7 +151,7 @@ BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
             subrule_list<
                 subrule_parser<ID, DefT, ContextT>,
                 RestT> >
-        operator,(subrule_parser<ID, DefT, ContextT> const& rhs)
+        operator,(subrule_parser<ID, DefT, ContextT> const& rhs_)
         {
             return subrule_list<
                 FirstT,
@@ -158,7 +161,7 @@ BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
                         first,
                         subrule_list<
                             subrule_parser<ID, DefT, ContextT>,
-                            RestT>(rhs, rest));
+                            RestT>(rhs_, rest));
         }
 
         FirstT first;
@@ -258,10 +261,10 @@ BOOST_SPIRIT_CLASSIC_NAMESPACE_BEGIN
         parse_main(ScannerT const& scan) const
         {
             typedef typename parser_result<self_t, ScannerT>::type result_t;
-            result_t result;
+            result_t result_;
             impl::parse_subrule<result_t, ScannerT, ID>::
-                do_(result, scan);
-            return result;
+                do_(result_, scan);
+            return result_;
         }
 
         template <typename ScannerT>

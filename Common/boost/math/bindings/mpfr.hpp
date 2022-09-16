@@ -11,7 +11,23 @@
 #ifndef BOOST_MATH_MPLFR_BINDINGS_HPP
 #define BOOST_MATH_MPLFR_BINDINGS_HPP
 
+#include <type_traits>
+
+#ifdef _MSC_VER
+//
+// We get a lot of warnings from the gmp, mpfr and gmpfrxx headers, 
+// disable them here, so we only see warnings from *our* code:
+//
+#pragma warning(push)
+#pragma warning(disable: 4127 4800 4512)
+#endif
+
 #include <gmpfrxx.h>
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #include <boost/math/tools/precision.hpp>
 #include <boost/math/tools/real_cast.hpp>
 #include <boost/math/policies/policy.hpp>
@@ -19,25 +35,43 @@
 #include <boost/math/special_functions/math_fwd.hpp>
 #include <boost/math/bindings/detail/big_digamma.hpp>
 #include <boost/math/bindings/detail/big_lanczos.hpp>
+#include <boost/math/tools/big_constant.hpp>
+#include <boost/math/tools/config.hpp>
 
 inline mpfr_class fabs(const mpfr_class& v)
 {
    return abs(v);
 }
+template <class T, class U>
+inline mpfr_class fabs(const __gmp_expr<T,U>& v)
+{
+   return abs(static_cast<mpfr_class>(v));
+}
 
-inline mpfr_class pow(const mpfr_class& b, const mpfr_class e)
+inline mpfr_class pow(const mpfr_class& b, const mpfr_class& e)
 {
    mpfr_class result;
    mpfr_pow(result.__get_mp(), b.__get_mp(), e.__get_mp(), GMP_RNDN);
    return result;
 }
-
+/*
+template <class T, class U, class V, class W>
+inline mpfr_class pow(const __gmp_expr<T,U>& b, const __gmp_expr<V,W>& e)
+{
+   return pow(static_cast<mpfr_class>(b), static_cast<mpfr_class>(e));
+}
+*/
 inline mpfr_class ldexp(const mpfr_class& v, int e)
 {
    //int e = mpfr_get_exp(*v.__get_mp());
    mpfr_class result(v);
    mpfr_set_exp(result.__get_mp(), e);
    return result;
+}
+template <class T, class U>
+inline mpfr_class ldexp(const __gmp_expr<T,U>& v, int e)
+{
+   return ldexp(static_cast<mpfr_class>(v), e);
 }
 
 inline mpfr_class frexp(const mpfr_class& v, int* expon)
@@ -48,8 +82,13 @@ inline mpfr_class frexp(const mpfr_class& v, int* expon)
    *expon = e;
    return result;
 }
+template <class T, class U>
+inline mpfr_class frexp(const __gmp_expr<T,U>& v, int* expon)
+{
+   return frexp(static_cast<mpfr_class>(v), expon);
+}
 
-mpfr_class fmod(const mpfr_class& v1, const mpfr_class& v2)
+inline mpfr_class fmod(const mpfr_class& v1, const mpfr_class& v2)
 {
    mpfr_class n;
    if(v1 < 0)
@@ -58,6 +97,11 @@ mpfr_class fmod(const mpfr_class& v1, const mpfr_class& v2)
       n = floor(v1 / v2);
    return v1 - n * v2;
 }
+template <class T, class U, class V, class W>
+inline mpfr_class fmod(const __gmp_expr<T,U>& v1, const __gmp_expr<V,W>& v2)
+{
+   return fmod(static_cast<mpfr_class>(v1), static_cast<mpfr_class>(v2));
+}
 
 template <class Policy>
 inline mpfr_class modf(const mpfr_class& v, long long* ipart, const Policy& pol)
@@ -65,43 +109,86 @@ inline mpfr_class modf(const mpfr_class& v, long long* ipart, const Policy& pol)
    *ipart = lltrunc(v, pol);
    return v - boost::math::tools::real_cast<mpfr_class>(*ipart);
 }
-template <class Policy>
-inline int iround(mpfr_class const& x, const Policy& pol)
+template <class T, class U, class Policy>
+inline mpfr_class modf(const __gmp_expr<T,U>& v, long long* ipart, const Policy& pol)
 {
-   return boost::math::tools::real_cast<int>(boost::math::round(x, pol));
+   return modf(static_cast<mpfr_class>(v), ipart, pol);
 }
 
 template <class Policy>
-inline long lround(mpfr_class const& x, const Policy& pol)
+inline int iround(mpfr_class const& x, const Policy&)
 {
-   return boost::math::tools::real_cast<long>(boost::math::round(x, pol));
+   return boost::math::tools::real_cast<int>(boost::math::round(x, typename boost::math::policies::normalise<Policy, boost::math::policies::rounding_error< boost::math::policies::throw_on_error> >::type()));
+}
+template <class T, class U, class Policy>
+inline int iround(__gmp_expr<T,U> const& x, const Policy& pol)
+{
+   return iround(static_cast<mpfr_class>(x), pol);
 }
 
 template <class Policy>
-inline long long llround(mpfr_class const& x, const Policy& pol)
+inline long lround(mpfr_class const& x, const Policy&)
 {
-   return boost::math::tools::real_cast<long long>(boost::math::round(x, pol));
+   return boost::math::tools::real_cast<long>(boost::math::round(x, typename boost::math::policies::normalise<Policy, boost::math::policies::rounding_error< boost::math::policies::throw_on_error> >::type()));
+}
+template <class T, class U, class Policy>
+inline long lround(__gmp_expr<T,U> const& x, const Policy& pol)
+{
+   return lround(static_cast<mpfr_class>(x), pol);
 }
 
 template <class Policy>
-inline int itrunc(mpfr_class const& x, const Policy& pol)
+inline long long llround(mpfr_class const& x, const Policy&)
 {
-   return boost::math::tools::real_cast<int>(boost::math::trunc(x, pol));
+   return boost::math::tools::real_cast<long long>(boost::math::round(x, typename boost::math::policies::normalise<Policy, boost::math::policies::rounding_error< boost::math::policies::throw_on_error> >::type()));
+}
+template <class T, class U, class Policy>
+inline long long llround(__gmp_expr<T,U> const& x, const Policy& pol)
+{
+   return llround(static_cast<mpfr_class>(x), pol);
 }
 
 template <class Policy>
-inline long ltrunc(mpfr_class const& x, const Policy& pol)
+inline int itrunc(mpfr_class const& x, const Policy&)
 {
-   return boost::math::tools::real_cast<long>(boost::math::trunc(x, pol));
+   return boost::math::tools::real_cast<int>(boost::math::trunc(x, typename boost::math::policies::normalise<Policy, boost::math::policies::rounding_error< boost::math::policies::throw_on_error> >::type()));
+}
+template <class T, class U, class Policy>
+inline int itrunc(__gmp_expr<T,U> const& x, const Policy& pol)
+{
+   return itrunc(static_cast<mpfr_class>(x), pol);
 }
 
 template <class Policy>
-inline long long lltrunc(mpfr_class const& x, const Policy& pol)
+inline long ltrunc(mpfr_class const& x, const Policy&)
 {
-   return boost::math::tools::real_cast<long long>(boost::math::trunc(x, pol));
+   return boost::math::tools::real_cast<long>(boost::math::trunc(x, typename boost::math::policies::normalise<Policy, boost::math::policies::rounding_error< boost::math::policies::throw_on_error> >::type()));
+}
+template <class T, class U, class Policy>
+inline long ltrunc(__gmp_expr<T,U> const& x, const Policy& pol)
+{
+   return ltrunc(static_cast<mpfr_class>(x), pol);
 }
 
-namespace boost{ namespace math{
+template <class Policy>
+inline long long lltrunc(mpfr_class const& x, const Policy&)
+{
+   return boost::math::tools::real_cast<long long>(boost::math::trunc(x, typename boost::math::policies::normalise<Policy, boost::math::policies::rounding_error< boost::math::policies::throw_on_error> >::type()));
+}
+template <class T, class U, class Policy>
+inline long long lltrunc(__gmp_expr<T,U> const& x, const Policy& pol)
+{
+   return lltrunc(static_cast<mpfr_class>(x), pol);
+}
+
+namespace boost{ 
+
+#ifdef BOOST_MATH_USE_FLOAT128
+   template<> struct std::is_convertible<BOOST_MATH_FLOAT128_TYPE, mpfr_class> : public std::integral_constant<bool, false>{};
+#endif
+   template<> struct std::is_convertible<long long, mpfr_class> : public std::integral_constant<bool, false>{};
+
+namespace math{
 
 #if defined(__GNUC__) && (__GNUC__ < 4)
    using ::iround;
@@ -187,6 +274,19 @@ struct lanczos<mpfr_class, Policy>
 
 } // namespace lanczos
 
+namespace constants{
+
+template <class Real, class Policy>
+struct construction_traits;
+
+template <class Policy>
+struct construction_traits<mpfr_class, Policy>
+{
+   typedef std::integral_constant<int, 0> type;
+};
+
+}
+
 namespace tools
 {
 
@@ -197,7 +297,7 @@ struct promote_arg<__gmp_expr<T,U> >
 };
 
 template<>
-inline int digits<mpfr_class>(BOOST_MATH_EXPLICIT_TEMPLATE_TYPE_SPEC(mpfr_class))
+inline int digits<mpfr_class>(BOOST_MATH_EXPLICIT_TEMPLATE_TYPE_SPEC(mpfr_class)) noexcept
 {
    return mpfr_class::get_dprec();
 }
@@ -355,14 +455,22 @@ inline mpfr_class skewness(const extreme_value_distribution<mpfr_class, Policy>&
    // This is 12 * sqrt(6) * zeta(3) / pi^3:
    // See http://mathworld.wolfram.com/ExtremeValueDistribution.html
    //
-   return boost::lexical_cast<mpfr_class>("1.1395470994046486574927930193898461120875997958366");
+   #ifdef BOOST_MATH_STANDALONE
+   static_assert(sizeof(Policy) == 0, "mpfr skewness can not be calculated in standalone mode");
+   #endif
+
+   return static_cast<mpfr_class>("1.1395470994046486574927930193898461120875997958366");
 }
 
 template <class Policy>
 inline mpfr_class skewness(const rayleigh_distribution<mpfr_class, Policy>& /*dist*/)
 {
   // using namespace boost::math::constants;
-  return boost::lexical_cast<mpfr_class>("0.63111065781893713819189935154422777984404221106391");
+  #ifdef BOOST_MATH_STANDALONE
+  static_assert(sizeof(Policy) == 0, "mpfr skewness can not be calculated in standalone mode");
+  #endif
+
+  return static_cast<mpfr_class>("0.63111065781893713819189935154422777984404221106391");
   // Computed using NTL at 150 bit, about 50 decimal digits.
   // return 2 * root_pi<RealType>() * pi_minus_three<RealType>() / pow23_four_minus_pi<RealType>();
 }
@@ -371,7 +479,11 @@ template <class Policy>
 inline mpfr_class kurtosis(const rayleigh_distribution<mpfr_class, Policy>& /*dist*/)
 {
   // using namespace boost::math::constants;
-  return boost::lexical_cast<mpfr_class>("3.2450893006876380628486604106197544154170667057995");
+  #ifdef BOOST_MATH_STANDALONE
+  static_assert(sizeof(Policy) == 0, "mpfr kurtosis can not be calculated in standalone mode");
+  #endif
+
+  return static_cast<mpfr_class>("3.2450893006876380628486604106197544154170667057995");
   // Computed using NTL at 150 bit, about 50 decimal digits.
   // return 3 - (6 * pi<RealType>() * pi<RealType>() - 24 * pi<RealType>() + 16) /
   // (four_minus_pi<RealType>() * four_minus_pi<RealType>());
@@ -382,7 +494,11 @@ inline mpfr_class kurtosis_excess(const rayleigh_distribution<mpfr_class, Policy
 {
   //using namespace boost::math::constants;
   // Computed using NTL at 150 bit, about 50 decimal digits.
-  return boost::lexical_cast<mpfr_class>("0.2450893006876380628486604106197544154170667057995");
+  #ifdef BOOST_MATH_STANDALONE
+  static_assert(sizeof(Policy) == 0, "mpfr excess kurtosis can not be calculated in standalone mode");
+  #endif
+
+  return static_cast<mpfr_class>("0.2450893006876380628486604106197544154170667057995");
   // return -(6 * pi<RealType>() * pi<RealType>() - 24 * pi<RealType>() + 16) /
   //   (four_minus_pi<RealType>() * four_minus_pi<RealType>());
 } // kurtosis
@@ -393,7 +509,7 @@ namespace detail{
 // Version of Digamma accurate to ~100 decimal digits.
 //
 template <class Policy>
-mpfr_class digamma_imp(mpfr_class x, const mpl::int_<0>* , const Policy& pol)
+mpfr_class digamma_imp(mpfr_class x, const std::integral_constant<int, 0>* , const Policy& pol)
 {
    //
    // This handles reflection of negative arguments, and all our
@@ -433,7 +549,7 @@ mpfr_class digamma_imp(mpfr_class x, const mpl::int_<0>* , const Policy& pol)
 // starting guess for Halley iteration:
 //
 template <class Policy>
-mpfr_class erf_inv_imp(const mpfr_class& p, const mpfr_class& q, const Policy&, const boost::mpl::int_<64>*)
+inline mpfr_class erf_inv_imp(const mpfr_class& p, const mpfr_class& q, const Policy&, const std::integral_constant<int, 64>*)
 {
    BOOST_MATH_STD_USING // for ADL of std names.
 
@@ -689,51 +805,55 @@ mpfr_class erf_inv_imp(const mpfr_class& p, const mpfr_class& q, const Policy&, 
    return result;
 }
 
-mpfr_class bessel_i0(mpfr_class x)
+inline mpfr_class bessel_i0(mpfr_class x)
 {
+   #ifdef BOOST_MATH_STANDALONE
+   static_assert(sizeof(x) == 0, "mpfr bessel_i0 can not be calculated in standalone mode");
+   #endif
+    
     static const mpfr_class P1[] = {
-        boost::lexical_cast<mpfr_class>("-2.2335582639474375249e+15"),
-        boost::lexical_cast<mpfr_class>("-5.5050369673018427753e+14"),
-        boost::lexical_cast<mpfr_class>("-3.2940087627407749166e+13"),
-        boost::lexical_cast<mpfr_class>("-8.4925101247114157499e+11"),
-        boost::lexical_cast<mpfr_class>("-1.1912746104985237192e+10"),
-        boost::lexical_cast<mpfr_class>("-1.0313066708737980747e+08"),
-        boost::lexical_cast<mpfr_class>("-5.9545626019847898221e+05"),
-        boost::lexical_cast<mpfr_class>("-2.4125195876041896775e+03"),
-        boost::lexical_cast<mpfr_class>("-7.0935347449210549190e+00"),
-        boost::lexical_cast<mpfr_class>("-1.5453977791786851041e-02"),
-        boost::lexical_cast<mpfr_class>("-2.5172644670688975051e-05"),
-        boost::lexical_cast<mpfr_class>("-3.0517226450451067446e-08"),
-        boost::lexical_cast<mpfr_class>("-2.6843448573468483278e-11"),
-        boost::lexical_cast<mpfr_class>("-1.5982226675653184646e-14"),
-        boost::lexical_cast<mpfr_class>("-5.2487866627945699800e-18"),
+        static_cast<mpfr_class>("-2.2335582639474375249e+15"),
+        static_cast<mpfr_class>("-5.5050369673018427753e+14"),
+        static_cast<mpfr_class>("-3.2940087627407749166e+13"),
+        static_cast<mpfr_class>("-8.4925101247114157499e+11"),
+        static_cast<mpfr_class>("-1.1912746104985237192e+10"),
+        static_cast<mpfr_class>("-1.0313066708737980747e+08"),
+        static_cast<mpfr_class>("-5.9545626019847898221e+05"),
+        static_cast<mpfr_class>("-2.4125195876041896775e+03"),
+        static_cast<mpfr_class>("-7.0935347449210549190e+00"),
+        static_cast<mpfr_class>("-1.5453977791786851041e-02"),
+        static_cast<mpfr_class>("-2.5172644670688975051e-05"),
+        static_cast<mpfr_class>("-3.0517226450451067446e-08"),
+        static_cast<mpfr_class>("-2.6843448573468483278e-11"),
+        static_cast<mpfr_class>("-1.5982226675653184646e-14"),
+        static_cast<mpfr_class>("-5.2487866627945699800e-18"),
     };
     static const mpfr_class Q1[] = {
-        boost::lexical_cast<mpfr_class>("-2.2335582639474375245e+15"),
-        boost::lexical_cast<mpfr_class>("7.8858692566751002988e+12"),
-        boost::lexical_cast<mpfr_class>("-1.2207067397808979846e+10"),
-        boost::lexical_cast<mpfr_class>("1.0377081058062166144e+07"),
-        boost::lexical_cast<mpfr_class>("-4.8527560179962773045e+03"),
-        boost::lexical_cast<mpfr_class>("1.0"),
+        static_cast<mpfr_class>("-2.2335582639474375245e+15"),
+        static_cast<mpfr_class>("7.8858692566751002988e+12"),
+        static_cast<mpfr_class>("-1.2207067397808979846e+10"),
+        static_cast<mpfr_class>("1.0377081058062166144e+07"),
+        static_cast<mpfr_class>("-4.8527560179962773045e+03"),
+        static_cast<mpfr_class>("1.0"),
     };
     static const mpfr_class P2[] = {
-        boost::lexical_cast<mpfr_class>("-2.2210262233306573296e-04"),
-        boost::lexical_cast<mpfr_class>("1.3067392038106924055e-02"),
-        boost::lexical_cast<mpfr_class>("-4.4700805721174453923e-01"),
-        boost::lexical_cast<mpfr_class>("5.5674518371240761397e+00"),
-        boost::lexical_cast<mpfr_class>("-2.3517945679239481621e+01"),
-        boost::lexical_cast<mpfr_class>("3.1611322818701131207e+01"),
-        boost::lexical_cast<mpfr_class>("-9.6090021968656180000e+00"),
+        static_cast<mpfr_class>("-2.2210262233306573296e-04"),
+        static_cast<mpfr_class>("1.3067392038106924055e-02"),
+        static_cast<mpfr_class>("-4.4700805721174453923e-01"),
+        static_cast<mpfr_class>("5.5674518371240761397e+00"),
+        static_cast<mpfr_class>("-2.3517945679239481621e+01"),
+        static_cast<mpfr_class>("3.1611322818701131207e+01"),
+        static_cast<mpfr_class>("-9.6090021968656180000e+00"),
     };
     static const mpfr_class Q2[] = {
-        boost::lexical_cast<mpfr_class>("-5.5194330231005480228e-04"),
-        boost::lexical_cast<mpfr_class>("3.2547697594819615062e-02"),
-        boost::lexical_cast<mpfr_class>("-1.1151759188741312645e+00"),
-        boost::lexical_cast<mpfr_class>("1.3982595353892851542e+01"),
-        boost::lexical_cast<mpfr_class>("-6.0228002066743340583e+01"),
-        boost::lexical_cast<mpfr_class>("8.5539563258012929600e+01"),
-        boost::lexical_cast<mpfr_class>("-3.1446690275135491500e+01"),
-        boost::lexical_cast<mpfr_class>("1.0"),
+        static_cast<mpfr_class>("-5.5194330231005480228e-04"),
+        static_cast<mpfr_class>("3.2547697594819615062e-02"),
+        static_cast<mpfr_class>("-1.1151759188741312645e+00"),
+        static_cast<mpfr_class>("1.3982595353892851542e+01"),
+        static_cast<mpfr_class>("-6.0228002066743340583e+01"),
+        static_cast<mpfr_class>("8.5539563258012929600e+01"),
+        static_cast<mpfr_class>("-3.1446690275135491500e+01"),
+        static_cast<mpfr_class>("1.0"),
     };
     mpfr_class value, factor, r;
 
@@ -755,7 +875,7 @@ mpfr_class bessel_i0(mpfr_class x)
     }
     else                                // x in (15, \infty)
     {
-        mpfr_class y = 1 / x - 1 / 15;
+        mpfr_class y = 1 / x - mpfr_class(1) / 15;
         r = evaluate_polynomial(P2, y) / evaluate_polynomial(Q2, y);
         factor = exp(x) / sqrt(x);
         value = factor * r;
@@ -764,7 +884,7 @@ mpfr_class bessel_i0(mpfr_class x)
     return value;
 }
 
-mpfr_class bessel_i1(mpfr_class x)
+inline mpfr_class bessel_i1(mpfr_class x)
 {
     static const mpfr_class P1[] = {
         static_cast<mpfr_class>("-1.4577180278143463643e+15"),
@@ -844,7 +964,11 @@ mpfr_class bessel_i1(mpfr_class x)
 
 } // namespace detail
 
-}}
+}
+
+template<> struct std::is_convertible<long double, mpfr_class> : public std::false_type{};
+
+}
 
 #endif // BOOST_MATH_MPLFR_BINDINGS_HPP
 

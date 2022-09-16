@@ -8,7 +8,7 @@
 #ifndef BOOST_IOSTREAMS_DETAIL_MODE_ADAPTER_HPP_INCLUDED
 #define BOOST_IOSTREAMS_DETAIL_MODE_ADAPTER_HPP_INCLUDED
 
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif              
 
@@ -31,19 +31,17 @@ class mode_adapter {
 private:
     struct empty_base { };
 public:
-    typedef typename wrapped_type<T>::type  policy_type;
+    typedef typename wrapped_type<T>::type  component_type;
     typedef typename char_type_of<T>::type  char_type;
     struct category 
         : Mode, 
           device_tag,
           mpl::if_<is_filter<T>, filter_tag, device_tag>,
           mpl::if_<is_filter<T>, multichar_tag, empty_base>,
-          #if !BOOST_WORKAROUND(BOOST_MSVC, < 1300)
-              closable_tag, // VC6 can't see member close()!
-          #endif
+          closable_tag,
           localizable_tag
         { };
-    explicit mode_adapter(const policy_type& t) : t_(t) { }
+    explicit mode_adapter(const component_type& t) : t_(t) { }
 
         // Device member functions.
 
@@ -52,10 +50,8 @@ public:
     std::streampos seek( stream_offset off, BOOST_IOS::seekdir way,
                          BOOST_IOS::openmode which = 
                              BOOST_IOS::in | BOOST_IOS::out );
-#if !BOOST_WORKAROUND(BOOST_MSVC, < 1300)
     void close();
     void close(BOOST_IOS::openmode which);
-#endif
 
         // Filter member functions.
 
@@ -88,7 +84,7 @@ public:
     void imbue(const Locale& loc)
     { iostreams::imbue(t_, loc); }
 private:
-    policy_type t_;
+    component_type t_;
 };
                     
 //------------------Implementation of mode_adapter----------------------------//
@@ -108,15 +104,13 @@ std::streampos mode_adapter<Mode, T>::seek
     (stream_offset off, BOOST_IOS::seekdir way, BOOST_IOS::openmode which)
 { return boost::iostreams::seek(t_, off, way, which); }
 
-#if !BOOST_WORKAROUND(BOOST_MSVC, < 1300)
-    template<typename Mode, typename T>
-    void mode_adapter<Mode, T>::close() 
-    { detail::close_all(t_); }
+template<typename Mode, typename T>
+void mode_adapter<Mode, T>::close()
+{ detail::close_all(t_); }
 
-    template<typename Mode, typename T>
-    void mode_adapter<Mode, T>::close(BOOST_IOS::openmode which) 
-    { iostreams::close(t_, which); }
-#endif
+template<typename Mode, typename T>
+void mode_adapter<Mode, T>::close(BOOST_IOS::openmode which)
+{ iostreams::close(t_, which); }
 
 } } } // End namespaces detail, iostreams, boost.
 

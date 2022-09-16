@@ -9,7 +9,7 @@
 #define BOOST_XPRESSIVE_DETAIL_CORE_MATCHER_LOOKBEHIND_MATCHER_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -33,11 +33,11 @@ namespace boost { namespace xpressive { namespace detail
     struct lookbehind_matcher
       : quant_style<quant_none, 0, Xpr::pure>
     {
-        lookbehind_matcher(Xpr const &xpr, std::size_t width, bool no, bool pure = Xpr::pure)
+        lookbehind_matcher(Xpr const &xpr, std::size_t wid, bool no, bool pure = Xpr::pure)
           : xpr_(xpr)
           , not_(no)
           , pure_(pure)
-          , width_(width)
+          , width_(wid)
         {
             BOOST_XPR_ENSURE_(!is_unknown(this->width_), regex_constants::error_badlookbehind,
                 "Variable-width look-behind assertions are not supported");

@@ -6,12 +6,12 @@
   Distributed under the Boost Software License, Version 1.0. (See accompanying
   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
-#ifndef CLASSIC_PHOENIX_CLOSURES_HPP
-#define CLASSIC_PHOENIX_CLOSURES_HPP
+#ifndef BOOST_SPIRIT_CLASSIC_PHOENIX_CLOSURES_HPP
+#define BOOST_SPIRIT_CLASSIC_PHOENIX_CLOSURES_HPP
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <boost/spirit/home/classic/phoenix/actor.hpp>
-#include <cassert>
+#include <boost/assert.hpp>
 
 #ifdef PHOENIX_THREADSAFE
 #include <boost/thread/tss.hpp>
@@ -20,6 +20,11 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 namespace phoenix {
+
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
+#pragma warning(push)
+#pragma warning(disable:4512) //assignment operator could not be generated
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -114,7 +119,7 @@ namespace phoenix {
 //      where 'clos' is an instance of our closure 'my_closure' above.
 //      Take note that the usage above precludes locally declared
 //      classes. If my_closure is a locally declared type, we can still
-//      use its self_type as a paramater to closure_frame:
+//      use its self_type as a parameter to closure_frame:
 //
 //          closure_frame<my_closure::self_type> frame(clos);
 //
@@ -265,8 +270,9 @@ public:
     eval(TupleT const& /*args*/) const
     {
         using namespace std;
-        assert(frame.get() != 0);
-        return (*frame.get())[tuple_index<N>()];
+        BOOST_ASSERT(frame.get() != 0);
+        tuple_index<N> const idx;
+        return (*frame.get())[idx];
     }
 
 private:
@@ -414,7 +420,11 @@ private:
     closure_frame_holder_ref(holder_t* holder_ = 0)
     {
 #ifdef PHOENIX_THREADSAFE
+#ifndef BOOST_THREAD_PROVIDES_ONCE_CXX11
         static boost::once_flag been_here = BOOST_ONCE_INIT;
+#else
+        static boost::once_flag been_here;
+#endif
         boost::call_once(been_here, tsp_frame_instance_init);
         boost::thread_specific_ptr<holder_t*> &tsp_frame = tsp_frame_instance();
         if (!tsp_frame.get())
@@ -430,6 +440,10 @@ private:
 
     mutable holder_t frame;
 };
+
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
+#pragma warning(pop)
+#endif
 
 }
    //  namespace phoenix

@@ -5,8 +5,8 @@
   Distributed under the Boost Software License, Version 1.0. (See accompanying
   file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 ==============================================================================*/
-#ifndef PHOENIX_PRIMITIVES_HPP
-#define PHOENIX_PRIMITIVES_HPP
+#ifndef BOOST_SPIRIT_CLASSIC_PHOENIX_PRIMITIVES_HPP
+#define BOOST_SPIRIT_CLASSIC_PHOENIX_PRIMITIVES_HPP
 
 ///////////////////////////////////////////////////////////////////////////////
 #include <boost/spirit/home/classic/phoenix/actor.hpp>
@@ -56,7 +56,8 @@ struct argument {
     typename tuple_element<N, TupleT>::type
     eval(TupleT const& args) const
     {
-        return args[tuple_index<N>()];
+        tuple_index<N> const idx;
+        return args[idx];
     }
 };
 
@@ -196,6 +197,11 @@ struct as_actor<T[N]> {
 //      a variable<T const&> object using a constant reference.
 //
 ///////////////////////////////////////////////////////////////////////////////
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
+#pragma warning(push)
+#pragma warning(disable:4512) //assignment operator could not be generated
+#endif
+
 template <typename T>
 struct variable {
 
@@ -214,6 +220,10 @@ struct variable {
 
     T& var;
 };
+
+#if BOOST_WORKAROUND(BOOST_MSVC, >= 1400)
+#pragma warning(pop)
+#endif
 
 //////////////////////////////////
 template <typename T>

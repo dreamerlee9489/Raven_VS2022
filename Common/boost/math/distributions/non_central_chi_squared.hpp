@@ -46,7 +46,7 @@ namespace boost
             // Computing discrete mixtures of continuous
             // distributions: noncentral chisquare, noncentral t
             // and the distribution of the square of the sample
-            // multiple correlation coeficient.
+            // multiple correlation coefficient.
             // D. Benton, K. Krishnamoorthy.
             // Computational Statistics & Data Analysis 43 (2003) 249 - 267
             //
@@ -62,8 +62,8 @@ namespace boost
             T lambda = theta / 2;
             T del = f / 2;
             T y = x / 2;
-            boost::uintmax_t max_iter = policies::get_max_series_iterations<Policy>();
-            T errtol = ldexp(1.0, -boost::math::policies::digits<T, Policy>());
+            std::uintmax_t max_iter = policies::get_max_series_iterations<Policy>();
+            T errtol = boost::math::policies::get_epsilon<T, Policy>();
             T sum = init_sum;
             //
             // k is the starting location for iteration, we'll
@@ -73,7 +73,7 @@ namespace boost
             //
             int k = iround(lambda, pol);
             // Forwards and backwards Poisson weights:
-            T poisf = boost::math::gamma_p_derivative(1 + k, lambda, pol);
+            T poisf = boost::math::gamma_p_derivative(static_cast<T>(1 + k), lambda, pol);
             T poisb = poisf * k / lambda;
             // Initial forwards central chi squared term:
             T gamf = boost::math::gamma_q(del + k, y, pol);
@@ -89,7 +89,7 @@ namespace boost
             // recurrences:
             //
             int i;
-            for(i = k; static_cast<boost::uintmax_t>(i-k) < max_iter; ++i)
+            for(i = k; static_cast<std::uintmax_t>(i-k) < max_iter; ++i)
             {
                T term = poisf * gamf;
                sum += term;
@@ -100,15 +100,15 @@ namespace boost
                   break;
             }
             //Error check:
-            if(static_cast<boost::uintmax_t>(i-k) >= max_iter)
-               policies::raise_evaluation_error(
-                  "cdf(non_central_chi_squared_distribution<%1%>, %1%)", 
+            if(static_cast<std::uintmax_t>(i-k) >= max_iter)
+               return policies::raise_evaluation_error(
+                  "cdf(non_central_chi_squared_distribution<%1%>, %1%)",
                   "Series did not converge, closest value was %1%", sum, pol);
             //
             // Now backwards iteration: the gamma
             // function recurrences are unstable in this
-            // direction, we rely on the terms deminishing in size
-            // faster than we introduce cancellation errors.  
+            // direction, we rely on the terms diminishing in size
+            // faster than we introduce cancellation errors.
             // For this reason it's very important that we start
             // *before* the largest term so that backwards iteration
             // is strictly converging.
@@ -133,7 +133,7 @@ namespace boost
             //
             // This is an implementation of:
             //
-            // Algorithm AS 275: 
+            // Algorithm AS 275:
             // Computing the Non-Central #2 Distribution Function
             // Cherng G. Ding
             // Applied Statistics, Vol. 41, No. 2. (1992), pp. 478-482.
@@ -141,7 +141,7 @@ namespace boost
             // This uses a stable forward iteration to sum the
             // CDF, unfortunately this can not be used for large
             // values of the non-centrality parameter because:
-            // * The first term may underfow to zero.
+            // * The first term may underflow to zero.
             // * We may need an extra-ordinary number of terms
             //   before we reach the first *significant* term.
             //
@@ -157,12 +157,12 @@ namespace boost
             if(sum == 0)
                return sum;
 
-            boost::uintmax_t max_iter = policies::get_max_series_iterations<Policy>();
-            T errtol = ldexp(1.0, -boost::math::policies::digits<T, Policy>());
+            std::uintmax_t max_iter = policies::get_max_series_iterations<Policy>();
+            T errtol = boost::math::policies::get_epsilon<T, Policy>();
 
             int i;
             T lterm(0), term(0);
-            for(i = 1; static_cast<boost::uintmax_t>(i) < max_iter; ++i)
+            for(i = 1; static_cast<std::uintmax_t>(i) < max_iter; ++i)
             {
                tk = tk * x / (f + 2 * i);
                uk = uk * lambda / i;
@@ -174,9 +174,9 @@ namespace boost
                   break;
             }
             //Error check:
-            if(static_cast<boost::uintmax_t>(i) >= max_iter)
-               policies::raise_evaluation_error(
-                  "cdf(non_central_chi_squared_distribution<%1%>, %1%)", 
+            if(static_cast<std::uintmax_t>(i) >= max_iter)
+               return policies::raise_evaluation_error(
+                  "cdf(non_central_chi_squared_distribution<%1%>, %1%)",
                   "Series did not converge, closest value was %1%", sum, pol);
             return sum;
          }
@@ -191,7 +191,7 @@ namespace boost
             // Computing discrete mixtures of continuous
             // distributions: noncentral chisquare, noncentral t
             // and the distribution of the square of the sample
-            // multiple correlation coeficient.
+            // multiple correlation coefficient.
             // D. Benton, K. Krishnamoorthy.
             // Computational Statistics & Data Analysis 43 (2003) 249 - 267
             //
@@ -202,8 +202,8 @@ namespace boost
             // Special case:
             if(y == 0)
                return 0;
-            boost::uintmax_t max_iter = policies::get_max_series_iterations<Policy>();
-            T errtol = ldexp(1.0, -boost::math::policies::digits<T, Policy>());
+            std::uintmax_t max_iter = policies::get_max_series_iterations<Policy>();
+            T errtol = boost::math::policies::get_epsilon<T, Policy>();
             T errorf(0), errorb(0);
 
             T x = y / 2;
@@ -225,7 +225,7 @@ namespace boost
             // Central chi squared term for backward iteration:
             T gamkb = gamkf;
             // Forwards Poisson weight:
-            T poiskf = gamma_p_derivative(k+1, del, pol);
+            T poiskf = gamma_p_derivative(static_cast<T>(k+1), del, pol);
             // Backwards Poisson weight:
             T poiskb = poiskf;
             // Forwards gamma function recursion term:
@@ -240,7 +240,7 @@ namespace boost
             // Backwards recursion first, this is the stable
             // direction for gamma function recurrences:
             //
-            while(i <= k) 
+            while(i <= k)
             {
                xtermb *= (a - i + 1) / x;
                gamkb += xtermb;
@@ -270,12 +270,12 @@ namespace boost
                errorf = poiskf * gamkf;
                sum += errorf;
                ++i;
-            }while((fabs(errorf / sum) > errtol) && (static_cast<boost::uintmax_t>(i) < max_iter));
+            }while((fabs(errorf / sum) > errtol) && (static_cast<std::uintmax_t>(i) < max_iter));
 
             //Error check:
-            if(static_cast<boost::uintmax_t>(i) >= max_iter)
-               policies::raise_evaluation_error(
-                  "cdf(non_central_chi_squared_distribution<%1%>, %1%)", 
+            if(static_cast<std::uintmax_t>(i) >= max_iter)
+               return policies::raise_evaluation_error(
+                  "cdf(non_central_chi_squared_distribution<%1%>, %1%)",
                   "Series did not converge, closest value was %1%", sum, pol);
 
             return sum;
@@ -288,14 +288,14 @@ namespace boost
             // As above but for the PDF:
             //
             BOOST_MATH_STD_USING
-            boost::uintmax_t max_iter = policies::get_max_series_iterations<Policy>();
-            T errtol = ldexp(1.0, -boost::math::policies::digits<T, Policy>());
+            std::uintmax_t max_iter = policies::get_max_series_iterations<Policy>();
+            T errtol = boost::math::policies::get_epsilon<T, Policy>();
             T x2 = x / 2;
             T n2 = n / 2;
             T l2 = lambda / 2;
             T sum = 0;
             int k = itrunc(l2);
-            T pois = gamma_p_derivative(k + 1, l2, pol) * gamma_p_derivative(n2 + k, x2);
+            T pois = gamma_p_derivative(static_cast<T>(k + 1), l2, pol) * gamma_p_derivative(static_cast<T>(n2 + k), x2);
             if(pois == 0)
                return 0;
             T poisb = pois;
@@ -304,9 +304,9 @@ namespace boost
                sum += pois;
                if(pois / sum < errtol)
                   break;
-               if(static_cast<boost::uintmax_t>(i - k) >= max_iter)
+               if(static_cast<std::uintmax_t>(i - k) >= max_iter)
                   return policies::raise_evaluation_error(
-                     "pdf(non_central_chi_squared_distribution<%1%>, %1%)", 
+                     "pdf(non_central_chi_squared_distribution<%1%>, %1%)",
                      "Series did not converge, closest value was %1%", sum, pol);
                pois *= l2 * x2 / ((i + 1) * (n2 + i));
             }
@@ -325,24 +325,24 @@ namespace boost
          {
             typedef typename policies::evaluation<RealType, Policy>::type value_type;
             typedef typename policies::normalise<
-               Policy, 
-               policies::promote_float<false>, 
-               policies::promote_double<false>, 
+               Policy,
+               policies::promote_float<false>,
+               policies::promote_double<false>,
                policies::discrete_quantile<>,
                policies::assert_undefined<> >::type forwarding_policy;
 
             BOOST_MATH_STD_USING
             value_type result;
             if(l == 0)
-               result = cdf(boost::math::chi_squared_distribution<RealType, Policy>(k), x);
+              return invert == false ? cdf(boost::math::chi_squared_distribution<RealType, Policy>(k), x) : cdf(complement(boost::math::chi_squared_distribution<RealType, Policy>(k), x));
             else if(x > k + l)
             {
                // Complement is the smaller of the two:
                result = detail::non_central_chi_square_q(
-                  static_cast<value_type>(x), 
-                  static_cast<value_type>(k), 
-                  static_cast<value_type>(l), 
-                  forwarding_policy(), 
+                  static_cast<value_type>(x),
+                  static_cast<value_type>(k),
+                  static_cast<value_type>(l),
+                  forwarding_policy(),
                   static_cast<value_type>(invert ? 0 : -1));
                invert = !invert;
             }
@@ -351,9 +351,9 @@ namespace boost
                // For small values of the non-centrality parameter
                // we can use Ding's method:
                result = detail::non_central_chi_square_p_ding(
-                  static_cast<value_type>(x), 
-                  static_cast<value_type>(k), 
-                  static_cast<value_type>(l), 
+                  static_cast<value_type>(x),
+                  static_cast<value_type>(k),
+                  static_cast<value_type>(l),
                   forwarding_policy(),
                   static_cast<value_type>(invert ? -1 : 0));
             }
@@ -365,16 +365,16 @@ namespace boost
                // may return zero when the result is in fact
                // finite, use Krishnamoorthy's method instead:
                result = detail::non_central_chi_square_p(
-                  static_cast<value_type>(x), 
-                  static_cast<value_type>(k), 
-                  static_cast<value_type>(l), 
+                  static_cast<value_type>(x),
+                  static_cast<value_type>(k),
+                  static_cast<value_type>(l),
                   forwarding_policy(),
                   static_cast<value_type>(invert ? -1 : 0));
             }
             if(invert)
                result = -result;
             return policies::checked_narrowing_cast<RealType, forwarding_policy>(
-               result, 
+               result,
                "boost::math::non_central_chi_squared_cdf<%1%>(%1%, %1%, %1%)");
          }
 
@@ -400,12 +400,13 @@ namespace boost
          template <class RealType, class Policy>
          RealType nccs_quantile(const non_central_chi_squared_distribution<RealType, Policy>& dist, const RealType& p, bool comp)
          {
+            BOOST_MATH_STD_USING
             static const char* function = "quantile(non_central_chi_squared_distribution<%1%>, %1%)";
             typedef typename policies::evaluation<RealType, Policy>::type value_type;
             typedef typename policies::normalise<
-               Policy, 
-               policies::promote_float<false>, 
-               policies::promote_double<false>, 
+               Policy,
+               policies::promote_float<false>,
+               policies::promote_double<false>,
                policies::discrete_quantile<>,
                policies::assert_undefined<> >::type forwarding_policy;
 
@@ -428,27 +429,62 @@ namespace boost
                &r,
                Policy()))
                   return (RealType)r;
-
-            value_type b = (l * l) / (k + 3 * l);
+            //
+            // Special cases get short-circuited first:
+            //
+            if(p == 0)
+               return comp ? policies::raise_overflow_error<RealType>(function, 0, Policy()) : 0;
+            if(p == 1)
+               return comp ? 0 : policies::raise_overflow_error<RealType>(function, 0, Policy());
+            //
+            // This is Pearson's approximation to the quantile, see
+            // Pearson, E. S. (1959) "Note on an approximation to the distribution of
+            // noncentral chi squared", Biometrika 46: 364.
+            // See also:
+            // "A comparison of approximations to percentiles of the noncentral chi2-distribution",
+            // Hardeo Sahai and Mario Miguel Ojeda, Revista de Matematica: Teoria y Aplicaciones 2003 10(1-2) : 57-76.
+            // Note that the latter reference refers to an approximation of the CDF, when they really mean the quantile.
+            //
+            value_type b = -(l * l) / (k + 3 * l);
             value_type c = (k + 3 * l) / (k + 2 * l);
             value_type ff = (k + 2 * l) / (c * c);
             value_type guess;
             if(comp)
+            {
                guess = b + c * quantile(complement(chi_squared_distribution<value_type, forwarding_policy>(ff), p));
+            }
             else
+            {
                guess = b + c * quantile(chi_squared_distribution<value_type, forwarding_policy>(ff), p);
-
-            if(guess < 0)
-               guess = tools::min_value<value_type>();
-
+            }
+            //
+            // Sometimes guess goes very small or negative, in that case we have
+            // to do something else for the initial guess, this approximation
+            // was provided in a private communication from Thomas Luu, PhD candidate,
+            // University College London.  It's an asymptotic expansion for the
+            // quantile which usually gets us within an order of magnitude of the
+            // correct answer.
+            // Fast and accurate parallel computation of quantile functions for random number generation,
+            // Thomas LuuDoctorial Thesis 2016
+            // http://discovery.ucl.ac.uk/1482128/
+            //
+            if(guess < 0.005)
+            {
+               value_type pp = comp ? 1 - p : p;
+               //guess = pow(pow(value_type(2), (k / 2 - 1)) * exp(l / 2) * pp * k, 2 / k);
+               guess = pow(pow(value_type(2), (k / 2 - 1)) * exp(l / 2) * pp * k * boost::math::tgamma(k / 2, forwarding_policy()), (2 / k));
+               if(guess == 0)
+                  guess = tools::min_value<value_type>();
+            }
             value_type result = detail::generic_quantile(
-               non_central_chi_squared_distribution<value_type, forwarding_policy>(k, l), 
-               p, 
-               guess, 
-               comp, 
+               non_central_chi_squared_distribution<value_type, forwarding_policy>(k, l),
+               p,
+               guess,
+               comp,
                function);
+
             return policies::checked_narrowing_cast<RealType, forwarding_policy>(
-               result, 
+               result,
                function);
          }
 
@@ -459,9 +495,9 @@ namespace boost
             static const char* function = "pdf(non_central_chi_squared_distribution<%1%>, %1%)";
             typedef typename policies::evaluation<RealType, Policy>::type value_type;
             typedef typename policies::normalise<
-               Policy, 
-               policies::promote_float<false>, 
-               policies::promote_double<false>, 
+               Policy,
+               policies::promote_float<false>,
+               policies::promote_double<false>,
                policies::discrete_quantile<>,
                policies::assert_undefined<> >::type forwarding_policy;
 
@@ -485,7 +521,6 @@ namespace boost
                Policy()))
                   return (RealType)r;
 
-         BOOST_MATH_STD_USING
          if(l == 0)
             return pdf(boost::math::chi_squared_distribution<RealType, forwarding_policy>(dist.degrees_of_freedom()), x);
 
@@ -511,7 +546,7 @@ namespace boost
             }
          }
          return policies::checked_narrowing_cast<RealType, forwarding_policy>(
-               r, 
+               r,
                function);
          }
 
@@ -526,8 +561,8 @@ namespace boost
             {
                non_central_chi_squared_distribution<RealType, Policy> d(v, lam);
                return comp ?
-                  p - cdf(complement(d, x))
-                  : cdf(d, x) - p;
+                  RealType(p - cdf(complement(d, x)))
+                  : RealType(cdf(d, x) - p);
             }
          private:
             RealType lam;
@@ -546,13 +581,13 @@ namespace boost
                //
                // Can't a thing if one of p and q is zero:
                //
-               return policies::raise_evaluation_error<RealType>(function, 
-                  "Can't find degrees of freedom when the probability is 0 or 1, only possible answer is %1%", 
+               return policies::raise_evaluation_error<RealType>(function,
+                  "Can't find degrees of freedom when the probability is 0 or 1, only possible answer is %1%",
                   RealType(std::numeric_limits<RealType>::quiet_NaN()), Policy());
             }
             degrees_of_freedom_finder<RealType, Policy> f(lam, x, p < q ? p : q, p < q ? false : true);
             tools::eps_tolerance<RealType> tol(policies::digits<RealType, Policy>());
-            boost::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
+            std::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
             //
             // Pick an initial guess that we know will give us a probability
             // right around 0.5.
@@ -565,7 +600,7 @@ namespace boost
             RealType result = ir.first + (ir.second - ir.first) / 2;
             if(max_iter >= policies::get_max_root_iterations<Policy>())
             {
-               policies::raise_evaluation_error<RealType>(function, "Unable to locate solution in a reasonable time:"
+               return policies::raise_evaluation_error<RealType>(function, "Unable to locate solution in a reasonable time:"
                   " or there is no answer to problem.  Current best guess is %1%", result, Policy());
             }
             return result;
@@ -582,8 +617,8 @@ namespace boost
             {
                non_central_chi_squared_distribution<RealType, Policy> d(v, lam);
                return comp ?
-                  p - cdf(complement(d, x))
-                  : cdf(d, x) - p;
+                  RealType(p - cdf(complement(d, x)))
+                  : RealType(cdf(d, x) - p);
             }
          private:
             RealType v;
@@ -602,13 +637,13 @@ namespace boost
                //
                // Can't do a thing if one of p and q is zero:
                //
-               return policies::raise_evaluation_error<RealType>(function, 
-                  "Can't find non centrality parameter when the probability is 0 or 1, only possible answer is %1%", 
+               return policies::raise_evaluation_error<RealType>(function,
+                  "Can't find non centrality parameter when the probability is 0 or 1, only possible answer is %1%",
                   RealType(std::numeric_limits<RealType>::quiet_NaN()), Policy());
             }
             non_centrality_finder<RealType, Policy> f(v, x, p < q ? p : q, p < q ? false : true);
             tools::eps_tolerance<RealType> tol(policies::digits<RealType, Policy>());
-            boost::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
+            std::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
             //
             // Pick an initial guess that we know will give us a probability
             // right around 0.5.
@@ -621,7 +656,7 @@ namespace boost
             RealType result = ir.first + (ir.second - ir.first) / 2;
             if(max_iter >= policies::get_max_root_iterations<Policy>())
             {
-               policies::raise_evaluation_error<RealType>(function, "Unable to locate solution in a reasonable time:"
+               return policies::raise_evaluation_error<RealType>(function, "Unable to locate solution in a reasonable time:"
                   " or there is no answer to problem.  Current best guess is %1%", result, Policy());
             }
             return result;
@@ -637,7 +672,7 @@ namespace boost
          typedef Policy policy_type;
 
          non_central_chi_squared_distribution(RealType df_, RealType lambda) : df(df_), ncp(lambda)
-         { 
+         {
             const char* function = "boost::math::non_central_chi_squared_distribution<%1%>::non_central_chi_squared_distribution(%1%,%1%)";
             RealType r;
             detail::check_df(
@@ -661,83 +696,83 @@ namespace boost
          static RealType find_degrees_of_freedom(RealType lam, RealType x, RealType p)
          {
             const char* function = "non_central_chi_squared<%1%>::find_degrees_of_freedom";
-            typedef typename policies::evaluation<RealType, Policy>::type value_type;
+            typedef typename policies::evaluation<RealType, Policy>::type eval_type;
             typedef typename policies::normalise<
-               Policy, 
-               policies::promote_float<false>, 
-               policies::promote_double<false>, 
+               Policy,
+               policies::promote_float<false>,
+               policies::promote_double<false>,
                policies::discrete_quantile<>,
                policies::assert_undefined<> >::type forwarding_policy;
-            value_type result = detail::find_degrees_of_freedom(
-               static_cast<value_type>(lam), 
-               static_cast<value_type>(x), 
-               static_cast<value_type>(p), 
-               static_cast<value_type>(1-p), 
+            eval_type result = detail::find_degrees_of_freedom(
+               static_cast<eval_type>(lam),
+               static_cast<eval_type>(x),
+               static_cast<eval_type>(p),
+               static_cast<eval_type>(1-p),
                forwarding_policy());
             return policies::checked_narrowing_cast<RealType, forwarding_policy>(
-               result, 
+               result,
                function);
          }
          template <class A, class B, class C>
          static RealType find_degrees_of_freedom(const complemented3_type<A,B,C>& c)
          {
             const char* function = "non_central_chi_squared<%1%>::find_degrees_of_freedom";
-            typedef typename policies::evaluation<RealType, Policy>::type value_type;
+            typedef typename policies::evaluation<RealType, Policy>::type eval_type;
             typedef typename policies::normalise<
-               Policy, 
-               policies::promote_float<false>, 
-               policies::promote_double<false>, 
+               Policy,
+               policies::promote_float<false>,
+               policies::promote_double<false>,
                policies::discrete_quantile<>,
                policies::assert_undefined<> >::type forwarding_policy;
-            value_type result = detail::find_degrees_of_freedom(
-               static_cast<value_type>(c.dist), 
-               static_cast<value_type>(c.param1), 
-               static_cast<value_type>(1-c.param2), 
-               static_cast<value_type>(c.param2), 
+            eval_type result = detail::find_degrees_of_freedom(
+               static_cast<eval_type>(c.dist),
+               static_cast<eval_type>(c.param1),
+               static_cast<eval_type>(1-c.param2),
+               static_cast<eval_type>(c.param2),
                forwarding_policy());
             return policies::checked_narrowing_cast<RealType, forwarding_policy>(
-               result, 
+               result,
                function);
          }
          static RealType find_non_centrality(RealType v, RealType x, RealType p)
          {
             const char* function = "non_central_chi_squared<%1%>::find_non_centrality";
-            typedef typename policies::evaluation<RealType, Policy>::type value_type;
+            typedef typename policies::evaluation<RealType, Policy>::type eval_type;
             typedef typename policies::normalise<
-               Policy, 
-               policies::promote_float<false>, 
-               policies::promote_double<false>, 
+               Policy,
+               policies::promote_float<false>,
+               policies::promote_double<false>,
                policies::discrete_quantile<>,
                policies::assert_undefined<> >::type forwarding_policy;
-            value_type result = detail::find_non_centrality(
-               static_cast<value_type>(v), 
-               static_cast<value_type>(x), 
-               static_cast<value_type>(p), 
-               static_cast<value_type>(1-p), 
+            eval_type result = detail::find_non_centrality(
+               static_cast<eval_type>(v),
+               static_cast<eval_type>(x),
+               static_cast<eval_type>(p),
+               static_cast<eval_type>(1-p),
                forwarding_policy());
             return policies::checked_narrowing_cast<RealType, forwarding_policy>(
-               result, 
+               result,
                function);
          }
          template <class A, class B, class C>
          static RealType find_non_centrality(const complemented3_type<A,B,C>& c)
          {
             const char* function = "non_central_chi_squared<%1%>::find_non_centrality";
-            typedef typename policies::evaluation<RealType, Policy>::type value_type;
+            typedef typename policies::evaluation<RealType, Policy>::type eval_type;
             typedef typename policies::normalise<
-               Policy, 
-               policies::promote_float<false>, 
-               policies::promote_double<false>, 
+               Policy,
+               policies::promote_float<false>,
+               policies::promote_double<false>,
                policies::discrete_quantile<>,
                policies::assert_undefined<> >::type forwarding_policy;
-            value_type result = detail::find_non_centrality(
-               static_cast<value_type>(c.dist), 
-               static_cast<value_type>(c.param1), 
-               static_cast<value_type>(1-c.param2), 
-               static_cast<value_type>(c.param2), 
+            eval_type result = detail::find_non_centrality(
+               static_cast<eval_type>(c.dist),
+               static_cast<eval_type>(c.param1),
+               static_cast<eval_type>(1-c.param2),
+               static_cast<eval_type>(c.param2),
                forwarding_policy());
             return policies::checked_narrowing_cast<RealType, forwarding_policy>(
-               result, 
+               result,
                function);
          }
       private:
@@ -748,13 +783,18 @@ namespace boost
 
       typedef non_central_chi_squared_distribution<double> non_central_chi_squared; // Reserved name of type double.
 
+      #ifdef __cpp_deduction_guides
+      template <class RealType>
+      non_central_chi_squared_distribution(RealType,RealType)->non_central_chi_squared_distribution<typename boost::math::tools::promote_args<RealType>::type>;
+      #endif
+
       // Non-member functions to give properties of the distribution.
 
       template <class RealType, class Policy>
       inline const std::pair<RealType, RealType> range(const non_central_chi_squared_distribution<RealType, Policy>& /* dist */)
       { // Range of permissible values for random variable k.
          using boost::math::tools::max_value;
-         return std::pair<RealType, RealType>(0, max_value<RealType>()); // Max integer?
+         return std::pair<RealType, RealType>(static_cast<RealType>(0), max_value<RealType>()); // Max integer?
       }
 
       template <class RealType, class Policy>
@@ -762,7 +802,7 @@ namespace boost
       { // Range of supported values for random variable k.
          // This is range where cdf rises from 0 to 1, and outside it, the pdf is zero.
          using boost::math::tools::max_value;
-         return std::pair<RealType, RealType>(0,  max_value<RealType>());
+         return std::pair<RealType, RealType>(static_cast<RealType>(0),  max_value<RealType>());
       }
 
       template <class RealType, class Policy>
@@ -803,7 +843,9 @@ namespace boost
             &r,
             Policy()))
                return (RealType)r;
-         return detail::generic_find_mode(dist, 1 + k, function);
+         bool asymptotic_mode = k < l/4;
+         RealType starting_point = asymptotic_mode ? k + l - RealType(3) : RealType(1) + k;
+         return detail::generic_find_mode(dist, starting_point, function);
       }
 
       template <class RealType, class Policy>
@@ -852,7 +894,7 @@ namespace boost
 
       template <class RealType, class Policy>
       inline RealType kurtosis_excess(const non_central_chi_squared_distribution<RealType, Policy>& dist)
-      { 
+      {
          const char* function = "boost::math::non_central_chi_squared_distribution<%1%>::kurtosis_excess()";
          RealType k = dist.degrees_of_freedom();
          RealType l = dist.non_centrality();
@@ -884,7 +926,7 @@ namespace boost
 
       template <class RealType, class Policy>
       RealType cdf(const non_central_chi_squared_distribution<RealType, Policy>& dist, const RealType& x)
-      { 
+      {
          const char* function = "boost::math::non_central_chi_squared_distribution<%1%>::cdf(%1%)";
          RealType k = dist.degrees_of_freedom();
          RealType l = dist.non_centrality();
@@ -959,6 +1001,3 @@ namespace boost
 #include <boost/math/distributions/detail/derived_accessors.hpp>
 
 #endif // BOOST_MATH_SPECIAL_NON_CENTRAL_CHI_SQUARE_HPP
-
-
-

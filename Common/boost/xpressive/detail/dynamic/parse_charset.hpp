@@ -9,10 +9,11 @@
 #define BOOST_XPRESSIVE_DETAIL_DYNAMIC_PARSE_CHARSET_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
+#include <boost/config.hpp>
 #include <boost/integer.hpp>
 #include <boost/mpl/bool.hpp>
 #include <boost/throw_exception.hpp>
@@ -69,7 +70,7 @@ struct char_overflow_handler
 //
 template<typename FwdIter, typename CompilerTraits>
 escape_value<typename iterator_value<FwdIter>::type, typename CompilerTraits::regex_traits::char_class_type>
-parse_escape(FwdIter &begin, FwdIter end, CompilerTraits &traits)
+parse_escape(FwdIter &begin, FwdIter end, CompilerTraits &tr)
 {
     using namespace regex_constants;
     typedef typename iterator_value<FwdIter>::type char_type;
@@ -84,8 +85,8 @@ parse_escape(FwdIter &begin, FwdIter end, CompilerTraits &traits)
     BOOST_XPR_ENSURE_(begin != end, error_escape, "unexpected end of pattern found");
     numeric::converter<int, uchar_t, converstion_traits, char_overflow_handler> converter;
     escape_value<char_type,char_class_type> esc = { 0, 0, 0, escape_char };
-    bool const icase = (0 != (regex_constants::icase_ & traits.flags()));
-    regex_traits const &rxtraits = traits.traits();
+    bool const icase = (0 != (regex_constants::icase_ & tr.flags()));
+    regex_traits const &rxtraits = tr.traits();
     FwdIter tmp;
 
     esc.class_ = rxtraits.lookup_classname(begin, begin + 1, icase);
@@ -192,28 +193,28 @@ inline void parse_charset
     FwdIter &begin
   , FwdIter end
   , compound_charset<RegexTraits> &chset
-  , CompilerTraits &traits
+  , CompilerTraits &tr
 )
 {
     using namespace regex_constants;
     typedef typename RegexTraits::char_type char_type;
     typedef typename RegexTraits::char_class_type char_class_type;
-    BOOST_ASSERT(begin != end);
-    RegexTraits const &rxtraits = traits.traits();
-    bool const icase = (0 != (regex_constants::icase_ & traits.flags()));
+    BOOST_XPR_ENSURE_(begin != end, error_brack, "unexpected end of pattern found");
+    RegexTraits const &rxtraits = tr.traits();
+    bool const icase = (0 != (regex_constants::icase_ & tr.flags()));
     FwdIter iprev = FwdIter();
     escape_value<char_type, char_class_type> esc = {0, 0, 0, escape_char};
     bool invert = false;
 
     // check to see if we have an inverse charset
-    if(begin != end && token_charset_invert == traits.get_charset_token(iprev = begin, end))
+    if(begin != end && token_charset_invert == tr.get_charset_token(iprev = begin, end))
     {
         begin = iprev;
         invert = true;
     }
 
     // skip the end token if-and-only-if it is the first token in the charset
-    if(begin != end && token_charset_end == traits.get_charset_token(iprev = begin, end))
+    if(begin != end && token_charset_end == tr.get_charset_token(iprev = begin, end))
     {
         for(; begin != iprev; ++begin)
         {
@@ -229,7 +230,7 @@ inline void parse_charset
 
     // remember the current position and grab the next token
     iprev = begin;
-    tok = traits.get_charset_token(begin, end);
+    tok = tr.get_charset_token(begin, end);
     do
     {
         BOOST_XPR_ENSURE_(begin != end, error_brack, "unexpected end of pattern found");
@@ -241,11 +242,12 @@ inline void parse_charset
             have_prev = false;
 
             // ch_prev is lower bound of a range
-            switch(traits.get_charset_token(begin, end))
+            switch(tr.get_charset_token(begin, end))
             {
             case token_charset_hyphen:
             case token_charset_invert:
                 begin = iprev2; // un-get these tokens and fall through
+                BOOST_FALLTHROUGH;
             case token_literal:
                 ch_next = *begin++;
                 BOOST_XPR_ENSURE_(ch_prev <= ch_next, error_range, "invalid charset range");
@@ -257,14 +259,15 @@ inline void parse_charset
                 chset.set_range(ch_prev, ch_next, rxtraits, icase);
                 continue;
             case token_escape:
-                esc = parse_escape(begin, end, traits);
+                esc = parse_escape(begin, end, tr);
                 if(escape_char == esc.type_)
                 {
                     BOOST_XPR_ENSURE_(ch_prev <= esc.ch_, error_range, "invalid charset range");
                     chset.set_range(ch_prev, esc.ch_, rxtraits, icase);
                     continue;
                 }
-            case token_charset_end: // fall through
+                BOOST_FALLTHROUGH;
+            case token_charset_end:
             default:                // not a range.
                 begin = iprev;      // backup to hyphen token
                 chset.set_char(ch_prev, rxtraits, icase);
@@ -298,12 +301,12 @@ inline void parse_charset
         case token_posix_charset_begin:
             {
                 FwdIter tmp = begin, start = begin;
-                bool invert = (token_charset_invert == traits.get_charset_token(tmp, end));
+                bool invert = (token_charset_invert == tr.get_charset_token(tmp, end));
                 if(invert)
                 {
                     begin = start = tmp;
                 }
-                while(token_literal == (tok = traits.get_charset_token(begin, end)))
+                while(token_literal == (tok = tr.get_charset_token(begin, end)))
                 {
                     tmp = ++begin;
                     BOOST_XPR_ENSURE_(begin != end, error_brack, "unexpected end of pattern found");
@@ -322,7 +325,7 @@ inline void parse_charset
             continue;
 
         case token_escape:
-            esc = parse_escape(begin, end, traits);
+            esc = parse_escape(begin, end, tr);
             if(escape_char == esc.type_)
             {
                 ch_prev = esc.ch_;
@@ -347,7 +350,7 @@ inline void parse_charset
         }
     }
     while(BOOST_XPR_ENSURE_((iprev = begin) != end, error_brack, "unexpected end of pattern found"),
-          token_charset_end != (tok = traits.get_charset_token(begin, end)));
+          token_charset_end != (tok = tr.get_charset_token(begin, end)));
 
     if(have_prev)
     {

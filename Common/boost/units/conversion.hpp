@@ -11,6 +11,9 @@
 #ifndef BOOST_UNITS_CONVERSION_HPP
 #define BOOST_UNITS_CONVERSION_HPP
 
+/// \file
+/// \brief Template for defining conversions between quantities.
+
 #include <boost/units/detail/conversion_impl.hpp>
 
 namespace boost {
@@ -48,7 +51,7 @@ struct conversion_helper;
 template<class From, class To>
 struct conversion_helper
 {
-    static To convert(const From&);
+    static BOOST_CONSTEXPR To convert(const From&);
 };
 
 #endif
@@ -74,9 +77,9 @@ struct conversion_helper
     template<>                                                              \
     struct base_unit_converter<Source, reduce_unit<Destination::unit_type>::type>   \
     {                                                                       \
-        static const bool is_defined = true;                                \
+        BOOST_STATIC_CONSTEXPR bool is_defined = true;                      \
         typedef type_ type;                                                 \
-        static type value() { return(value_); }                             \
+        static BOOST_CONSTEXPR type value() { return(value_); }             \
     };                                                                      \
     }                                                                       \
     }                                                                       \
@@ -100,9 +103,9 @@ struct conversion_helper
         BOOST_UNITS_MAKE_HETEROGENEOUS_UNIT(Destination, typename Source::dimension_type)\
     >                                                                       \
     {                                                                       \
-        static const bool is_defined = true;                                \
+        BOOST_STATIC_CONSTEXPR bool is_defined = true;                      \
         typedef type_ type;                                                 \
-        static type value() { return(value_); }                             \
+        static BOOST_CONSTEXPR type value() { return(value_); }             \
     };                                                                      \
     }                                                                       \
     }                                                                       \
@@ -118,7 +121,7 @@ struct conversion_helper
     template<>                                                      \
     struct unscaled_get_default_conversion<unscale<Source>::type>   \
     {                                                               \
-        static const bool is_defined = true;                        \
+        BOOST_STATIC_CONSTEXPR bool is_defined = true;              \
         typedef Dest::unit_type type;                               \
     };                                                              \
     }                                                               \
@@ -137,7 +140,7 @@ struct conversion_helper
     template<BOOST_PP_SEQ_ENUM(Params)>                                 \
     struct unscaled_get_default_conversion<Source>                      \
     {                                                                   \
-        static const bool is_defined = true;                            \
+        BOOST_STATIC_CONSTEXPR bool is_defined = true;                  \
         typedef typename Dest::unit_type type;                          \
     };                                                                  \
     }                                                                   \
@@ -155,8 +158,8 @@ namespace units {                                                           \
 namespace namespace_ {                                                      \
 struct name_ ## _base_unit                                                  \
   : base_unit<name_ ## _base_unit, unit::dimension_type, id> {              \
-    static const char* name() { return(name_string_); }                     \
-    static const char* symbol() { return(symbol_string_); };                \
+    static BOOST_CONSTEXPR const char* name() { return(name_string_); }     \
+    static BOOST_CONSTEXPR const char* symbol() { return(symbol_string_); } \
 };                                                                          \
 }                                                                           \
 }                                                                           \
@@ -167,10 +170,13 @@ BOOST_UNITS_DEFAULT_CONVERSION(namespace_::name_ ## _base_unit, unit)
 /// Find the conversion factor between two units.
 template<class FromUnit,class ToUnit>
 inline
-typename detail::conversion_factor_helper<FromUnit, ToUnit>::type
+BOOST_CONSTEXPR
+typename one_to_double_type<
+    typename detail::conversion_factor_helper<FromUnit, ToUnit>::type
+>::type
 conversion_factor(const FromUnit&,const ToUnit&)
 {
-    return(detail::conversion_factor_helper<FromUnit, ToUnit>::value());
+    return(one_to_double(detail::conversion_factor_helper<FromUnit, ToUnit>::value()));
 }
 
 } // namespace units

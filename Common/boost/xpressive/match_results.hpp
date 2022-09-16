@@ -16,7 +16,7 @@
 #define BOOST_XPRESSIVE_MATCH_RESULTS_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -40,6 +40,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/detail/workaround.hpp>
 #include <boost/numeric/conversion/converter.hpp>
+#include <boost/optional.hpp>
 #include <boost/range/end.hpp>
 #include <boost/range/begin.hpp>
 #include <boost/range/as_literal.hpp>
@@ -57,8 +58,11 @@
 #include <boost/xpressive/detail/utility/literals.hpp>
 #include <boost/xpressive/detail/utility/algorithm.hpp>
 #include <boost/xpressive/detail/utility/counted_base.hpp>
-#include <boost/proto/proto_fwd.hpp>
-#include <boost/proto/eval.hpp>
+// Doxygen can't handle proto :-(
+#ifndef BOOST_XPRESSIVE_DOXYGEN_INVOKED
+# include <boost/proto/proto_fwd.hpp>
+# include <boost/proto/traits.hpp>
+#endif
 
 namespace boost { namespace xpressive { namespace detail
 {
@@ -115,21 +119,26 @@ struct char_overflow_handler_
 ///////////////////////////////////////////////////////////////////////////////
 // transform_op enum
 //
-enum transform_op { None = 0, Upper = 1, Lower = 2 };
-enum transform_scope { Next = 0, Rest = 1 };
+enum transform_op { op_none = 0, op_upper = 1, op_lower = 2 };
+enum transform_scope { scope_next = 0, scope_rest = 1 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // case_converting_iterator
 //
 template<typename OutputIterator, typename Char>
 struct case_converting_iterator
-  : std::iterator<std::output_iterator_tag, Char, void, void, case_converting_iterator<OutputIterator, Char> >
 {
-    case_converting_iterator(OutputIterator const &out, traits<Char> const *traits)
+    typedef std::output_iterator_tag iterator_category;
+    typedef Char value_type;
+    typedef void difference_type;
+    typedef void pointer;
+    typedef case_converting_iterator<OutputIterator, Char> reference;
+
+    case_converting_iterator(OutputIterator const &out, traits<Char> const *tr)
       : out_(out)
-      , traits_(traits)
-      , next_(None)
-      , rest_(None)
+      , traits_(tr)
+      , next_(op_none)
+      , rest_(op_none)
     {}
 
     OutputIterator base() const
@@ -140,7 +149,7 @@ struct case_converting_iterator
     case_converting_iterator &operator ++()
     {
         ++this->out_;
-        this->next_ = None;
+        this->next_ = op_none;
         return *this;
     }
 
@@ -158,8 +167,8 @@ struct case_converting_iterator
 
     friend bool set_transform(case_converting_iterator &iter, transform_op trans, transform_scope scope)
     {
-        BOOST_ASSERT(scope == Next || scope == Rest);
-        if(scope == Next)
+        BOOST_ASSERT(scope == scope_next || scope == scope_rest);
+        if(scope == scope_next)
             iter.next_ = trans;
         else
             iter.rest_ = trans;
@@ -170,11 +179,11 @@ struct case_converting_iterator
     {
         switch(this->next_ ? this->next_ : this->rest_)
         {
-        case Lower:
+        case op_lower:
             ch = this->traits_->tolower(ch);
             break;
 
-        case Upper:
+        case op_upper:
             ch = this->traits_->toupper(ch);
             break;
 
@@ -202,8 +211,13 @@ inline bool set_transform(Iterator &, transform_op, transform_scope)
 //
 template<typename Char>
 struct noop_output_iterator
-  : std::iterator<std::output_iterator_tag, Char, void, void, noop_output_iterator<Char> >
 {
+    typedef std::output_iterator_tag iterator_category;
+    typedef Char value_type;
+    typedef void difference_type;
+    typedef void pointer;
+    typedef noop_output_iterator<Char> reference;
+
     noop_output_iterator &operator ++()
     {
         return *this;
@@ -410,14 +424,14 @@ public:
         {
             extras_type &extras = this->get_extras_();
             std::size_t size = that.sub_matches_.size();
-            detail::sub_match_impl<BidiIter> *sub_matches = extras.sub_match_stack_.push_sequence(size, detail::sub_match_impl_default());
+            detail::sub_match_impl<BidiIter> *sub_matches = extras.sub_match_stack_.push_sequence(size, detail::sub_match_impl<BidiIter>(*that.base_), detail::fill);
             detail::core_access<BidiIter>::init_sub_match_vector(this->sub_matches_, sub_matches, size, that.sub_matches_);
 
-            // BUGBUG this doesn't share the extras::sequence_stack
-            this->nested_results_ = that.nested_results_;
+            this->base_ = that.base_;
             this->prefix_ = that.prefix_;
             this->suffix_ = that.suffix_;
-            this->base_ = that.base_;
+            // BUGBUG this doesn't share the extras::sequence_stack
+            this->nested_results_ = that.nested_results_;
             this->traits_ = that.traits_;
         }
     }
@@ -469,7 +483,7 @@ public:
     /// of a repeated search with a regex_iterator then base is the same as prefix().first - end note]
     difference_type position(size_type sub = 0) const
     {
-        return this->sub_matches_[ sub ].matched ? std::distance(this->base_, this->sub_matches_[ sub ].first) : -1;
+        return this->sub_matches_[ sub ].matched ? std::distance(*this->base_, this->sub_matches_[ sub ].first) : -1;
     }
 
     /// Returns (*this)[sub].str().
@@ -493,17 +507,19 @@ public:
     /// Returns a reference to the sub_match object representing the character sequence from
     /// the start of the string being matched/searched, to the start of the match found.
     ///
+    /// \pre (*this)[0].matched is true
     const_reference prefix() const
     {
-        return this->prefix_;
+        return this->prefix_ ? *this->prefix_ : this->sub_matches_[this->sub_matches_.size()];
     }
 
     /// Returns a reference to the sub_match object representing the character sequence from
     /// the end of the match found to the end of the string being matched/searched.
     ///
+    /// \pre (*this)[0].matched is true
     const_reference suffix() const
     {
-        return this->suffix_;
+        return this->suffix_ ? *this->suffix_ : this->sub_matches_[this->sub_matches_.size()];
     }
 
     /// Returns a starting iterator that enumerates over all the marked sub-expression matches
@@ -526,7 +542,7 @@ public:
     ///
     operator bool_type() const
     {
-        return this->sub_matches_[ 0 ].matched ? &dummy::i_ : 0;
+        return (!this->empty() && this->sub_matches_[ 0 ].matched) ? &dummy::i_ : 0;
     }
 
     /// Returns true if empty() || !(*this)[0].matched, else returns false.
@@ -650,11 +666,12 @@ public:
     /// \throw nothrow
     void swap(match_results<BidiIter> &that) // throw()
     {
-        std::swap(this->regex_id_, that.regex_id_);
+        using std::swap;
+        swap(this->regex_id_, that.regex_id_);
         this->sub_matches_.swap(that.sub_matches_);
-        std::swap(this->base_, that.base_);
-        std::swap(this->prefix_, that.prefix_);
-        std::swap(this->suffix_, that.suffix_);
+        this->base_.swap(that.base_);
+        this->prefix_.swap(that.prefix_);
+        this->suffix_.swap(that.suffix_);
         this->nested_results_.swap(that.nested_results_);
         this->extras_ptr_.swap(that.extras_ptr_);
         this->traits_.swap(that.traits_);
@@ -709,13 +726,13 @@ private:
     void init_
     (
         regex_id_type regex_id
-      , intrusive_ptr<detail::traits<char_type> const> const &traits
+      , intrusive_ptr<detail::traits<char_type> const> const &tr
       , detail::sub_match_impl<BidiIter> *sub_matches
       , size_type size
       , std::vector<detail::named_mark<char_type> > const &named_marks
     )
     {
-        this->traits_ = traits;
+        this->traits_ = tr;
         this->regex_id_ = regex_id;
         this->named_marks_ = named_marks;
         detail::core_access<BidiIter>::init_sub_match_vector(this->sub_matches_, sub_matches, size);
@@ -738,14 +755,8 @@ private:
     void set_prefix_suffix_(BidiIter begin, BidiIter end)
     {
         this->base_ = begin;
-
-        this->prefix_.first = begin;
-        this->prefix_.second = this->sub_matches_[ 0 ].first;
-        this->prefix_.matched = this->prefix_.first != this->prefix_.second;
-
-        this->suffix_.first = this->sub_matches_[ 0 ].second;
-        this->suffix_.second = end;
-        this->suffix_.matched = this->suffix_.first != this->suffix_.second;
+        this->prefix_ = sub_match<BidiIter>(begin, this->sub_matches_[ 0 ].first, begin != this->sub_matches_[ 0 ].first);
+        this->suffix_ = sub_match<BidiIter>(this->sub_matches_[ 0 ].second, end, this->sub_matches_[ 0 ].second != end);
 
         typename nested_results_type::iterator ibegin = this->nested_results_.begin();
         typename nested_results_type::iterator iend = this->nested_results_.end();
@@ -933,12 +944,14 @@ private:
     (
         OutputIterator out
       , Expr const &format
-      , regex_constants::match_flag_type flags
+      , regex_constants::match_flag_type
       , mpl::size_t<4>
     ) const
     {
-        detail::replacement_context<BidiIter> ctx(*this);
-        return this->format2_(out, proto::eval(format, ctx));
+        // detail::ReplaceAlgo may be an incomplete type at this point, so
+        // we can't construct it directly.
+        typedef typename mpl::if_c<true, detail::ReplaceAlgo, OutputIterator>::type ReplaceAlgo;
+        return this->format2_(out, ReplaceAlgo()(format, 0, *this));
     }
 
     /// INTERNAL ONLY
@@ -1093,11 +1106,12 @@ private:
             case BOOST_XPR_CHAR_(char_type, ':'):
                 if(metacolon)
                 {
+                    BOOST_FALLTHROUGH;
             case BOOST_XPR_CHAR_(char_type, ')'):
                     ++cur;
                     return out;
                 }
-                // else fall-through
+                BOOST_FALLTHROUGH;
 
             default:
                 *out++ = *cur++;
@@ -1247,35 +1261,35 @@ private:
             break;
 
         case BOOST_XPR_CHAR_(char_type, 'l'):
-            if(!set_transform(out, detail::Lower, detail::Next))
+            if(!set_transform(out, detail::op_lower, detail::scope_next))
             {
                 *out++ = BOOST_XPR_CHAR_(char_type, 'l');
             }
             break;
 
         case BOOST_XPR_CHAR_(char_type, 'L'):
-            if(!set_transform(out, detail::Lower, detail::Rest))
+            if(!set_transform(out, detail::op_lower, detail::scope_rest))
             {
                 *out++ = BOOST_XPR_CHAR_(char_type, 'L');
             }
             break;
 
         case BOOST_XPR_CHAR_(char_type, 'u'):
-            if(!set_transform(out, detail::Upper, detail::Next))
+            if(!set_transform(out, detail::op_upper, detail::scope_next))
             {
                 *out++ = BOOST_XPR_CHAR_(char_type, 'u');
             }
             break;
 
         case BOOST_XPR_CHAR_(char_type, 'U'):
-            if(!set_transform(out, detail::Upper, detail::Rest))
+            if(!set_transform(out, detail::op_upper, detail::scope_rest))
             {
                 *out++ = BOOST_XPR_CHAR_(char_type, 'U');
             }
             break;
 
         case BOOST_XPR_CHAR_(char_type, 'E'):
-            if(!set_transform(out, detail::None, detail::Rest))
+            if(!set_transform(out, detail::op_none, detail::scope_rest))
             {
                 *out++ = BOOST_XPR_CHAR_(char_type, 'E');
             }
@@ -1335,9 +1349,9 @@ private:
 
     regex_id_type regex_id_;
     detail::sub_match_vector<BidiIter> sub_matches_;
-    BidiIter base_;
-    sub_match<BidiIter> prefix_;
-    sub_match<BidiIter> suffix_;
+    boost::optional<BidiIter> base_;
+    boost::optional<sub_match<BidiIter> > prefix_;
+    boost::optional<sub_match<BidiIter> > suffix_;
     nested_results_type nested_results_;
     intrusive_ptr<extras_type> extras_ptr_;
     intrusive_ptr<detail::traits<char_type> const> traits_;
@@ -1350,8 +1364,10 @@ private:
 //
 template<typename BidiIter>
 struct regex_id_filter_predicate
-  : std::unary_function<match_results<BidiIter>, bool>
 {
+    typedef match_results<BidiIter> argument_type;
+    typedef bool result_type;
+
     regex_id_filter_predicate(regex_id_type regex_id)
       : regex_id_(regex_id)
     {

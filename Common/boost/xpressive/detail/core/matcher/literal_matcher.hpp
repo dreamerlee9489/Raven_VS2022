@@ -9,7 +9,7 @@
 #define BOOST_XPRESSIVE_DETAIL_CORE_MATCHER_LITERAL_MATCHER_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -37,8 +37,8 @@ namespace boost { namespace xpressive { namespace detail
           : ch_(ch)
         {}
 
-        literal_matcher(char_type ch, Traits const &traits)
-          : ch_(detail::translate(ch, traits, icase_type()))
+        literal_matcher(char_type ch, Traits const &tr)
+          : ch_(detail::translate(ch, tr, icase_type()))
         {}
 
         template<typename BidiIter, typename Next>

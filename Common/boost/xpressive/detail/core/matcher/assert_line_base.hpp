@@ -9,7 +9,7 @@
 #define BOOST_XPRESSIVE_DETAIL_CORE_MATCHER_DETAIL_ASSERT_LINE_BASE_HPP_EAN_10_04_2005
 
 // MS compatible compilers support #pragma once
-#if defined(_MSC_VER) && (_MSC_VER >= 1020)
+#if defined(_MSC_VER)
 # pragma once
 #endif
 
@@ -31,10 +31,10 @@ namespace boost { namespace xpressive { namespace detail
         typedef typename Traits::char_class_type char_class_type;
 
     protected:
-        assert_line_base(Traits const &traits)
-            : newline_(lookup_classname(traits, "newline"))
-            , nl_(traits.widen('\n'))
-            , cr_(traits.widen('\r'))
+        assert_line_base(Traits const &tr)
+            : newline_(lookup_classname(tr, "newline"))
+            , nl_(tr.widen('\n'))
+            , cr_(tr.widen('\r'))
         {
         }
 
