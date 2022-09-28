@@ -10,36 +10,46 @@ INCLUDELIB LIBCMTD
 INCLUDELIB OLDNAMES
 
 CONST	SEGMENT
-$SG28508 DB	'explore', 00H
-$SG28510 DB	'think', 00H
-	ORG $+2
-$SG28512 DB	'arrive_at_position', 00H
-	ORG $+1
-$SG28514 DB	'seek_to_position', 00H
+$SG28508 DB	0ccH, 0bdH, 0cbH, 0f7H, 00H
 	ORG $+3
-$SG28516 DB	'follow_path', 00H
-$SG28518 DB	'traverse_edge', 00H
-	ORG $+2
-$SG28520 DB	'move_to_position', 00H
+$SG28510 DB	0cbH, 0bcH, 0bfH, 0bcH, 00H
 	ORG $+3
-$SG28522 DB	'get_health', 00H
-	ORG $+1
-$SG28524 DB	'get_shotgun', 00H
-$SG28526 DB	'get_railgun', 00H
-$SG28528 DB	'get_rocket_launcher', 00H
-$SG28530 DB	'wander', 00H
-	ORG $+1
-$SG28532 DB	'negotiate_door', 00H
-	ORG $+1
-$SG28534 DB	'attack_target', 00H
-	ORG $+2
-$SG28536 DB	'hunt_target', 00H
-$SG28538 DB	'strafe', 00H
-	ORG $+1
-$SG28540 DB	'adjust_range', 00H
+$SG28512 DB	0b5H, 0d6H, 0b4H, 0efH, 0ceH, 0bbH, 0d6H, 0c3H, 00H
 	ORG $+3
-$SG28542 DB	'say_phrase', 00H
+$SG28514 DB	0d1H, 0b0H, 0d5H, 0d2H, 0ceH, 0bbH, 0d6H, 0c3H, 00H
+	ORG $+3
+$SG28516 DB	0b8H, 0faH, 0cbH, 0e6H, 0c2H, 0b7H, 0beH, 0b6H, 00H
+	ORG $+3
+$SG28518 DB	0d1H, 0d8H, 0c2H, 0b7H, 0cfH, 0dfH, 0d7H, 0dfH, 00H
+	ORG $+3
+$SG28520 DB	0d2H, 0c6H, 0b6H, 0afH, 0ceH, 0bbH, 0d6H, 0c3H, 00H
+	ORG $+3
+$SG28522 DB	0bbH, 0f1H, 0c8H, 0a1H, 0bdH, 0a1H, 0bfH, 0b5H, 0b0H, 0fcH
+	DB	00H
 	ORG $+1
+$SG28524 DB	0bbH, 0f1H, 0c8H, 0a1H, 0c9H, 0a2H, 0b5H, 0afH, 0c7H, 0b9H
+	DB	00H
+	ORG $+1
+$SG28526 DB	0bbH, 0f1H, 0c8H, 0a1H, 0b9H, 0e2H, 0cfH, 0dfH, 0c7H, 0b9H
+	DB	00H
+	ORG $+1
+$SG28528 DB	0bbH, 0f1H, 0c8H, 0a1H, 0bbH, 0f0H, 0bcH, 0fdH, 0d7H, 0b0H
+	DB	0d6H, 0c3H, 00H
+	ORG $+3
+$SG28530 DB	0d3H, 0ceH, 0d7H, 0dfH, 00H
+	ORG $+3
+$SG28532 DB	0bfH, 0aaH, 0c3H, 0c5H, 00H
+	ORG $+3
+$SG28534 DB	0b9H, 0a5H, 0bbH, 0f7H, 0c4H, 0bfH, 0b1H, 0eaH, 00H
+	ORG $+3
+$SG28536 DB	0c1H, 0d4H, 0c8H, 0a1H, 0c4H, 0bfH, 0b1H, 0eaH, 00H
+	ORG $+3
+$SG28538 DB	0c9H, 0a8H, 0c9H, 0e4H, 00H
+	ORG $+3
+$SG28540 DB	0b5H, 0f7H, 0d5H, 0fbH, 0b7H, 0b6H, 0ceH, 0a7H, 00H
+	ORG $+3
+$SG28542 DB	0b7H, 0a2H, 0cbH, 0cdH, 0b6H, 0ccH, 0d3H, 0efH, 00H
+	ORG $+3
 $SG28544 DB	'UNKNOWN GOAL TYPE!', 00H
 	ORG $+1
 $SG31036 DB	'invalid argument', 00H
@@ -2154,7 +2164,7 @@ _gt$ = 12						; size = 4
 	mov	DWORD PTR _this$[ebp], ecx
 	mov	DWORD PTR $T1[ebp], 0
 
-; 12   :   switch(gt)
+; 12   : 	switch (gt)
 
 	mov	eax, DWORD PTR _gt$[ebp]
 	mov	DWORD PTR tv64[ebp], eax
@@ -2164,10 +2174,10 @@ _gt$ = 12						; size = 4
 	jmp	DWORD PTR $LN26@Convert[ecx*4]
 $LN4@Convert:
 
-; 13   :   {
-; 14   :   case goal_explore:
+; 13   : 	{
+; 14   : 	case goal_explore:
 ; 15   : 
-; 16   :     return "explore";
+; 16   : 		return "探索";
 
 	push	OFFSET $SG28508
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2180,9 +2190,9 @@ $LN4@Convert:
 $LN5@Convert:
 
 ; 17   : 
-; 18   :   case goal_think:
+; 18   : 	case goal_think:
 ; 19   : 
-; 20   :     return "think";
+; 20   : 		return "思考";
 
 	push	OFFSET $SG28510
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2195,9 +2205,9 @@ $LN5@Convert:
 $LN6@Convert:
 
 ; 21   : 
-; 22   :   case goal_arrive_at_position:
+; 22   : 	case goal_arrive_at_position:
 ; 23   : 
-; 24   :     return "arrive_at_position";
+; 24   : 		return "抵达位置";
 
 	push	OFFSET $SG28512
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2210,9 +2220,9 @@ $LN6@Convert:
 $LN7@Convert:
 
 ; 25   : 
-; 26   :   case goal_seek_to_position:
+; 26   : 	case goal_seek_to_position:
 ; 27   : 
-; 28   :     return "seek_to_position";
+; 28   : 		return "寻找位置";
 
 	push	OFFSET $SG28514
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2225,9 +2235,9 @@ $LN7@Convert:
 $LN8@Convert:
 
 ; 29   : 
-; 30   :   case goal_follow_path:
+; 30   : 	case goal_follow_path:
 ; 31   : 
-; 32   :     return "follow_path";
+; 32   : 		return "跟随路径";
 
 	push	OFFSET $SG28516
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2240,9 +2250,9 @@ $LN8@Convert:
 $LN9@Convert:
 
 ; 33   : 
-; 34   :   case goal_traverse_edge:
+; 34   : 	case goal_traverse_edge:
 ; 35   : 
-; 36   :     return "traverse_edge";
+; 36   : 		return "沿路线走";
 
 	push	OFFSET $SG28518
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2255,9 +2265,9 @@ $LN9@Convert:
 $LN10@Convert:
 
 ; 37   : 
-; 38   :   case goal_move_to_position:
+; 38   : 	case goal_move_to_position:
 ; 39   : 
-; 40   :     return "move_to_position";
+; 40   : 		return "移动位置";
 
 	push	OFFSET $SG28520
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2270,9 +2280,9 @@ $LN10@Convert:
 $LN11@Convert:
 
 ; 41   : 
-; 42   :   case goal_get_health:
+; 42   : 	case goal_get_health:
 ; 43   : 
-; 44   :     return "get_health";
+; 44   : 		return "获取健康包";
 
 	push	OFFSET $SG28522
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2285,9 +2295,9 @@ $LN11@Convert:
 $LN12@Convert:
 
 ; 45   : 
-; 46   :   case goal_get_shotgun:
+; 46   : 	case goal_get_shotgun:
 ; 47   : 
-; 48   :     return "get_shotgun";
+; 48   : 		return "获取散弹枪";
 
 	push	OFFSET $SG28524
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2300,9 +2310,9 @@ $LN12@Convert:
 $LN13@Convert:
 
 ; 49   : 
-; 50   :   case goal_get_railgun:
+; 50   : 	case goal_get_railgun:
 ; 51   : 
-; 52   :     return "get_railgun";
+; 52   : 		return "获取光线枪";
 
 	push	OFFSET $SG28526
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2315,9 +2325,9 @@ $LN13@Convert:
 $LN14@Convert:
 
 ; 53   : 
-; 54   :   case goal_get_rocket_launcher:
+; 54   : 	case goal_get_rocket_launcher:
 ; 55   : 
-; 56   :     return "get_rocket_launcher";
+; 56   : 		return "获取火箭装置";
 
 	push	OFFSET $SG28528
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2330,9 +2340,9 @@ $LN14@Convert:
 $LN15@Convert:
 
 ; 57   : 
-; 58   :   case goal_wander:
+; 58   : 	case goal_wander:
 ; 59   : 
-; 60   :     return "wander";
+; 60   : 		return "游走";
 
 	push	OFFSET $SG28530
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2345,9 +2355,9 @@ $LN15@Convert:
 $LN16@Convert:
 
 ; 61   : 
-; 62   :   case goal_negotiate_door:
+; 62   : 	case goal_negotiate_door:
 ; 63   : 
-; 64   :     return "negotiate_door";
+; 64   : 		return "开门";
 
 	push	OFFSET $SG28532
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2360,9 +2370,9 @@ $LN16@Convert:
 $LN17@Convert:
 
 ; 65   : 
-; 66   :   case goal_attack_target:
+; 66   : 	case goal_attack_target:
 ; 67   : 
-; 68   :     return "attack_target";
+; 68   : 		return "攻击目标";
 
 	push	OFFSET $SG28534
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2375,9 +2385,9 @@ $LN17@Convert:
 $LN18@Convert:
 
 ; 69   : 
-; 70   :   case goal_hunt_target:
+; 70   : 	case goal_hunt_target:
 ; 71   : 
-; 72   :     return "hunt_target";
+; 72   : 		return "猎取目标";
 
 	push	OFFSET $SG28536
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2390,9 +2400,9 @@ $LN18@Convert:
 $LN19@Convert:
 
 ; 73   : 
-; 74   :   case goal_strafe:
+; 74   : 	case goal_strafe:
 ; 75   : 
-; 76   :     return "strafe";
+; 76   : 		return "扫射";
 
 	push	OFFSET $SG28538
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2405,9 +2415,9 @@ $LN19@Convert:
 $LN20@Convert:
 
 ; 77   : 
-; 78   :   case goal_adjust_range:
+; 78   : 	case goal_adjust_range:
 ; 79   : 
-; 80   :     return "adjust_range";
+; 80   : 		return "调整范围";
 
 	push	OFFSET $SG28540
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2420,9 +2430,9 @@ $LN20@Convert:
 $LN21@Convert:
 
 ; 81   : 
-; 82   :   case goal_say_phrase:
+; 82   : 	case goal_say_phrase:
 ; 83   : 
-; 84   :     return "say_phrase";
+; 84   : 		return "发送短语";
 
 	push	OFFSET $SG28542
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2435,9 +2445,9 @@ $LN21@Convert:
 $LN22@Convert:
 
 ; 85   : 
-; 86   :   default:
+; 86   : 	default:
 ; 87   : 
-; 88   :     return "UNKNOWN GOAL TYPE!";
+; 88   : 		return "UNKNOWN GOAL TYPE!";
 
 	push	OFFSET $SG28544
 	mov	ecx, DWORD PTR ___$ReturnUdt$[ebp]
@@ -2449,7 +2459,7 @@ $LN22@Convert:
 $LN1@Convert:
 
 ; 89   : 
-; 90   :   }//end switch
+; 90   : 	}//end switch
 ; 91   : }
 
 	add	esp, 12					; 0000000cH
@@ -2499,7 +2509,7 @@ __$EHRec$ = -12						; size = 12
 	lea	eax, DWORD PTR __$EHRec$[ebp]
 	mov	DWORD PTR fs:0, eax
 
-; 6    :   static GoalTypeToString instance;
+; 6    : 	static GoalTypeToString instance;
 
 	mov	eax, DWORD PTR __tls_index
 	mov	ecx, DWORD PTR fs:__tls_array
@@ -2521,7 +2531,7 @@ __$EHRec$ = -12						; size = 12
 	add	esp, 4
 $LN2@Instance:
 
-; 7    :   return &instance;
+; 7    : 	return &instance;
 
 	mov	eax, OFFSET ?instance@?1??Instance@GoalTypeToString@@SAPAV2@XZ@4V2@A
 
