@@ -35,8 +35,9 @@ CONST	SEGMENT
 	DD	0ffff00H
 	DD	0c8c8c8H
 	DD	0e6e6ffH
-$SG173569 DB	0c2H, 0d3H, 0b6H, 0e1H, 0d5H, 0dfH, 00H
+$SG173569 DB	0ccH, 0b9H, 0bfH, 0cbH, 0b4H, 0f3H, 0d5H, 0bdH, 00H
 $SG173648 DB	00H
+	ORG $+2
 $SG173571 DB	'MyWindowClass', 00H
 	ORG $+2
 $SG173645 DB	'map', 00H
@@ -56,11 +57,11 @@ $SG182711 DB	'invalid argument', 00H
 	ORG $+3
 $SG182712 DB	'%s', 00H
 	ORG $+1
-$SG182715 DB	00H, 00H
-	ORG $+2
 $SG182713 DB	'C:\Program Files\Microsoft Visual Studio\2022\Community\'
 	DB	'VC\Tools\MSVC\14.33.31629\include\xmemory', 00H
-	ORG $+6
+	ORG $+2
+$SG182715 DB	00H, 00H
+	ORG $+2
 $SG182714 DB	'C', 00H, ':', 00H, '\', 00H, 'P', 00H, 'r', 00H, 'o', 00H
 	DB	'g', 00H, 'r', 00H, 'a', 00H, 'm', 00H, ' ', 00H, 'F', 00H, 'i'
 	DB	00H, 'l', 00H, 'e', 00H, 's', 00H, '\', 00H, 'M', 00H, 'i', 00H
