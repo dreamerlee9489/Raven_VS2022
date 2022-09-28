@@ -40,7 +40,7 @@ $SG177828 DB	'D', 00H, ':', 00H, '\', 00H, '_', 00H, '_', 00H, 'R', 00H
 	DB	00H, 'n', 00H, 'e', 00H, 'r', 00H, '.', 00H, 'c', 00H, 'p', 00H
 	DB	'p', 00H, 00H, 00H
 	ORG $+2
-$SG195647 DB	'invalid argument', 00H
+$SG195648 DB	'invalid argument', 00H
 	ORG $+3
 $SG177829 DB	'm', 00H, '_', 00H, 'p', 00H, 'C', 00H, 'u', 00H, 'r', 00H
 	DB	'r', 00H, 'e', 00H, 'n', 00H, 't', 00H, 'S', 00H, 'e', 00H, 'a'
@@ -58,7 +58,7 @@ $SG177829 DB	'm', 00H, '_', 00H, 'p', 00H, 'C', 00H, 'u', 00H, 'r', 00H
 $SG178710 DB	'<Raven_PathPlanner::CycleOnce>: No search object instant'
 	DB	'iated', 00H
 	ORG $+2
-$SG195648 DB	'%s', 00H
+$SG195649 DB	'%s', 00H
 	ORG $+1
 $SG178711 DB	'D', 00H, ':', 00H, '\', 00H, '_', 00H, '_', 00H, 'R', 00H
 	DB	'e', 00H, 'p', 00H, 'o', 00H, 's', 00H, '\', 00H, '_', 00H, '_'
@@ -73,7 +73,7 @@ $SG178711 DB	'D', 00H, ':', 00H, '\', 00H, '_', 00H, '_', 00H, 'R', 00H
 	DB	00H, 'n', 00H, 'e', 00H, 'r', 00H, '.', 00H, 'c', 00H, 'p', 00H
 	DB	'p', 00H, 00H, 00H
 	ORG $+2
-$SG195651 DB	00H, 00H
+$SG195652 DB	00H, 00H
 	ORG $+2
 $SG178712 DB	'm', 00H, '_', 00H, 'p', 00H, 'C', 00H, 'u', 00H, 'r', 00H
 	DB	'r', 00H, 'e', 00H, 'n', 00H, 't', 00H, 'S', 00H, 'e', 00H, 'a'
@@ -106,18 +106,20 @@ $SG187036 DB	'(', 00H, 'i', 00H, 'd', 00H, 'x', 00H, ' ', 00H, '<', 00H
 	DB	00H, '_', 00H, 'N', 00H, 'o', 00H, 'd', 00H, 'e', 00H, 's', 00H
 	DB	'.', 00H, 's', 00H, 'i', 00H, 'z', 00H, 'e', 00H, '(', 00H, ')'
 	DB	00H, ')', 00H, ' ', 00H, '&', 00H, '&', 00H, ' ', 00H, '(', 00H
-	DB	'i', 00H, 'd', 00H, 'x', 00H, ' ', 00H, '>', 00H, '=', 00H, '0'
-	DB	00H, ')', 00H, ' ', 00H, '&', 00H, '&', 00H, ' ', 00H, '"', 00H
-	DB	'<', 00H, 'S', 00H, 'p', 00H, 'a', 00H, 'r', 00H, 's', 00H, 'e'
-	DB	00H, 'G', 00H, 'r', 00H, 'a', 00H, 'p', 00H, 'h', 00H, ':', 00H
-	DB	':', 00H, 'G', 00H, 'e', 00H, 't', 00H, 'N', 00H, 'o', 00H, 'd'
-	DB	00H, 'e', 00H, '>', 00H, ':', 00H, ' ', 00H, 'i', 00H, 'n', 00H
-	DB	'v', 00H, 'a', 00H, 'l', 00H, 'i', 00H, 'd', 00H, ' ', 00H, 'i'
-	DB	00H, 'n', 00H, 'd', 00H, 'e', 00H, 'x', 00H, '"', 00H, 00H, 00H
-$SG195649 DB	'C:\Program Files\Microsoft Visual Studio\2022\Community\'
+	DB	'i', 00H, 'd', 00H, 'x', 00H, ' ', 00H, '>', 00H, '=', 00H, ' '
+	DB	00H, '0', 00H, ')', 00H, ' ', 00H, '&', 00H, '&', 00H, ' ', 00H
+	DB	'"', 00H, '<', 00H, 'S', 00H, 'p', 00H, 'a', 00H, 'r', 00H, 's'
+	DB	00H, 'e', 00H, 'G', 00H, 'r', 00H, 'a', 00H, 'p', 00H, 'h', 00H
+	DB	':', 00H, ':', 00H, 'G', 00H, 'e', 00H, 't', 00H, 'N', 00H, 'o'
+	DB	00H, 'd', 00H, 'e', 00H, '>', 00H, ':', 00H, ' ', 00H, 'i', 00H
+	DB	'n', 00H, 'v', 00H, 'a', 00H, 'l', 00H, 'i', 00H, 'd', 00H, ' '
+	DB	00H, 'i', 00H, 'n', 00H, 'd', 00H, 'e', 00H, 'x', 00H, '"', 00H
+	DB	00H, 00H
+	ORG $+6
+$SG195650 DB	'C:\Program Files\Microsoft Visual Studio\2022\Community\'
 	DB	'VC\Tools\MSVC\14.33.31629\include\xmemory', 00H
 	ORG $+6
-$SG195650 DB	'C', 00H, ':', 00H, '\', 00H, 'P', 00H, 'r', 00H, 'o', 00H
+$SG195651 DB	'C', 00H, ':', 00H, '\', 00H, 'P', 00H, 'r', 00H, 'o', 00H
 	DB	'g', 00H, 'r', 00H, 'a', 00H, 'm', 00H, ' ', 00H, 'F', 00H, 'i'
 	DB	00H, 'l', 00H, 'e', 00H, 's', 00H, '\', 00H, 'M', 00H, 'i', 00H
 	DB	'c', 00H, 'r', 00H, 'o', 00H, 's', 00H, 'o', 00H, 'f', 00H, 't'
@@ -133,11 +135,11 @@ $SG195650 DB	'C', 00H, ':', 00H, '\', 00H, 'P', 00H, 'r', 00H, 'o', 00H
 	DB	'c', 00H, 'l', 00H, 'u', 00H, 'd', 00H, 'e', 00H, '\', 00H, 'x'
 	DB	00H, 'm', 00H, 'e', 00H, 'm', 00H, 'o', 00H, 'r', 00H, 'y', 00H
 	DB	00H, 00H
-$SG195652 DB	'"', 00H, 'i', 00H, 'n', 00H, 'v', 00H, 'a', 00H, 'l', 00H
+$SG195653 DB	'"', 00H, 'i', 00H, 'n', 00H, 'v', 00H, 'a', 00H, 'l', 00H
 	DB	'i', 00H, 'd', 00H, ' ', 00H, 'a', 00H, 'r', 00H, 'g', 00H, 'u'
 	DB	00H, 'm', 00H, 'e', 00H, 'n', 00H, 't', 00H, '"', 00H, 00H, 00H
 	ORG $+6
-$SG196013 DB	'C:\Program Files\Microsoft Visual Studio\2022\Community\'
+$SG196014 DB	'C:\Program Files\Microsoft Visual Studio\2022\Community\'
 	DB	'VC\Tools\MSVC\14.33.31629\include\xlocale', 00H
 CONST	ENDS
 PUBLIC	?__empty_global_delete@@YAXPAX@Z		; __empty_global_delete
@@ -7098,11 +7100,11 @@ $LN4@Allocate_m:
 	je	SHORT $LN7@Allocate_m
 	jmp	SHORT $LN2@Allocate_m
 $LN7@Allocate_m:
-	push	OFFSET $SG195647
 	push	OFFSET $SG195648
+	push	OFFSET $SG195649
 	push	0
 	push	137					; 00000089H
-	push	OFFSET $SG195649
+	push	OFFSET $SG195650
 	push	2
 	call	__CrtDbgReport
 	add	esp, 24					; 00000018H
@@ -7112,9 +7114,9 @@ $LN7@Allocate_m:
 $LN12@Allocate_m:
 	push	0
 	push	137					; 00000089H
-	push	OFFSET $SG195650
 	push	OFFSET $SG195651
 	push	OFFSET $SG195652
+	push	OFFSET $SG195653
 	call	__invalid_parameter
 	add	esp, 20					; 00000014H
 	xor	ecx, ecx
@@ -8922,7 +8924,7 @@ _this$ = -4						; size = 4
 ?end@ConstEdgeIterator@?$SparseGraph@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@VNavGraphEdge@@@@QAE_NXZ PROC ; SparseGraph<NavGraphNode<Trigger<Raven_Bot> *>,NavGraphEdge>::ConstEdgeIterator::end, COMDAT
 ; _this$ = ecx
 
-; 267  :         {
+; 269  : 		{
 
 	push	ebp
 	mov	ebp, esp
@@ -8936,7 +8938,7 @@ _this$ = -4						; size = 4
 	mov	DWORD PTR [ebp-4], eax
 	mov	DWORD PTR _this$[ebp], ecx
 
-; 268  :           return (curEdge == G.m_Edges[NodeIndex].end());
+; 270  : 			return (curEdge == G.m_Edges[NodeIndex].end());
 
 	lea	eax, DWORD PTR $T1[ebp]
 	push	eax
@@ -8959,7 +8961,7 @@ _this$ = -4						; size = 4
 	call	??1?$_List_const_iterator@V?$_List_val@U?$_List_simple_types@VNavGraphEdge@@@std@@@std@@@std@@QAE@XZ
 	mov	al, BYTE PTR $T2[ebp]
 
-; 269  :         }
+; 271  : 		}
 
 	add	esp, 24					; 00000018H
 	cmp	ebp, esp
@@ -8977,7 +8979,7 @@ _this$ = -4						; size = 4
 ?next@ConstEdgeIterator@?$SparseGraph@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@VNavGraphEdge@@@@QAEPBVNavGraphEdge@@XZ PROC ; SparseGraph<NavGraphNode<Trigger<Raven_Bot> *>,NavGraphEdge>::ConstEdgeIterator::next, COMDAT
 ; _this$ = ecx
 
-; 251  :         {
+; 253  : 		{
 
 	push	ebp
 	mov	ebp, esp
@@ -8985,13 +8987,13 @@ _this$ = -4						; size = 4
 	mov	DWORD PTR [ebp-4], -858993460		; ccccccccH
 	mov	DWORD PTR _this$[ebp], ecx
 
-; 252  :           ++curEdge;
+; 254  : 			++curEdge;
 
 	mov	ecx, DWORD PTR _this$[ebp]
 	call	??E?$_List_const_iterator@V?$_List_val@U?$_List_simple_types@VNavGraphEdge@@@std@@@std@@@std@@QAEAAV01@XZ ; std::_List_const_iterator<std::_List_val<std::_List_simple_types<NavGraphEdge> > >::operator++
 
-; 253  : 
-; 254  : 		  if(end())
+; 255  : 
+; 256  : 			if (end())
 
 	mov	ecx, DWORD PTR _this$[ebp]
 	call	?end@ConstEdgeIterator@?$SparseGraph@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@VNavGraphEdge@@@@QAE_NXZ ; SparseGraph<NavGraphNode<Trigger<Raven_Bot> *>,NavGraphEdge>::ConstEdgeIterator::end
@@ -8999,28 +9001,28 @@ _this$ = -4						; size = 4
 	test	eax, eax
 	je	SHORT $LN2@next
 
-; 255  : 		  {
-; 256  : 			  return NULL;
+; 257  : 			{
+; 258  : 				return NULL;
 
 	xor	eax, eax
 	jmp	SHORT $LN1@next
 
-; 257  : 		  }
+; 259  : 			}
 
 	jmp	SHORT $LN1@next
 $LN2@next:
 
-; 258  : 		  else
-; 259  : 		  {
-; 260  : 			return &(*curEdge);
+; 260  : 			else
+; 261  : 			{
+; 262  : 				return &(*curEdge);
 
 	mov	ecx, DWORD PTR _this$[ebp]
 	call	??D?$_List_const_iterator@V?$_List_val@U?$_List_simple_types@VNavGraphEdge@@@std@@@std@@@std@@QBEABVNavGraphEdge@@XZ ; std::_List_const_iterator<std::_List_val<std::_List_simple_types<NavGraphEdge> > >::operator*
 $LN1@next:
 
-; 261  : 		  }
-; 262  : 
-; 263  :         }
+; 263  : 			}
+; 264  : 
+; 265  : 		}
 
 	add	esp, 4
 	cmp	ebp, esp
@@ -9034,13 +9036,13 @@ _TEXT	ENDS
 ; File D:\__Repos\__MyRepos\Raven_VS2022\Common\graph\SparseGraph.h
 ;	COMDAT ?begin@ConstEdgeIterator@?$SparseGraph@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@VNavGraphEdge@@@@QAEPBVNavGraphEdge@@XZ
 _TEXT	SEGMENT
-tv82 = -20						; size = 4
+tv86 = -20						; size = 4
 $T1 = -16						; size = 12
 _this$ = -4						; size = 4
 ?begin@ConstEdgeIterator@?$SparseGraph@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@VNavGraphEdge@@@@QAEPBVNavGraphEdge@@XZ PROC ; SparseGraph<NavGraphNode<Trigger<Raven_Bot> *>,NavGraphEdge>::ConstEdgeIterator::begin, COMDAT
 ; _this$ = ecx
 
-; 244  :         {        
+; 244  : 		{
 
 	push	ebp
 	mov	ebp, esp
@@ -9053,7 +9055,7 @@ _this$ = -4						; size = 4
 	mov	DWORD PTR [ebp-4], eax
 	mov	DWORD PTR _this$[ebp], ecx
 
-; 245  :           curEdge = G.m_Edges[NodeIndex].begin();
+; 245  : 			curEdge = G.m_Edges[NodeIndex].begin();
 
 	lea	eax, DWORD PTR $T1[ebp]
 	push	eax
@@ -9066,21 +9068,34 @@ _this$ = -4						; size = 4
 	call	??A?$vector@V?$list@VNavGraphEdge@@V?$allocator@VNavGraphEdge@@@std@@@std@@V?$allocator@V?$list@VNavGraphEdge@@V?$allocator@VNavGraphEdge@@@std@@@std@@@2@@std@@QBEABV?$list@VNavGraphEdge@@V?$allocator@VNavGraphEdge@@@std@@@1@I@Z ; std::vector<std::list<NavGraphEdge,std::allocator<NavGraphEdge> >,std::allocator<std::list<NavGraphEdge,std::allocator<NavGraphEdge> > > >::operator[]
 	mov	ecx, eax
 	call	?begin@?$list@VNavGraphEdge@@V?$allocator@VNavGraphEdge@@@std@@@std@@QBE?AV?$_List_const_iterator@V?$_List_val@U?$_List_simple_types@VNavGraphEdge@@@std@@@std@@@2@XZ ; std::list<NavGraphEdge,std::allocator<NavGraphEdge> >::begin
-	mov	DWORD PTR tv82[ebp], eax
-	mov	ecx, DWORD PTR tv82[ebp]
+	mov	DWORD PTR tv86[ebp], eax
+	mov	ecx, DWORD PTR tv86[ebp]
 	push	ecx
 	mov	ecx, DWORD PTR _this$[ebp]
 	call	??4?$_List_const_iterator@V?$_List_val@U?$_List_simple_types@VNavGraphEdge@@@std@@@std@@@std@@QAEAAV01@$$QAV01@@Z
 	lea	ecx, DWORD PTR $T1[ebp]
 	call	??1?$_List_const_iterator@V?$_List_val@U?$_List_simple_types@VNavGraphEdge@@@std@@@std@@@std@@QAE@XZ
 
-; 246  :     
-; 247  :           return &(*curEdge);
+; 246  : 
+; 247  : 			if (end()) return 0;
+
+	mov	ecx, DWORD PTR _this$[ebp]
+	call	?end@ConstEdgeIterator@?$SparseGraph@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@VNavGraphEdge@@@@QAE_NXZ ; SparseGraph<NavGraphNode<Trigger<Raven_Bot> *>,NavGraphEdge>::ConstEdgeIterator::end
+	movzx	edx, al
+	test	edx, edx
+	je	SHORT $LN2@begin
+	xor	eax, eax
+	jmp	SHORT $LN1@begin
+$LN2@begin:
+
+; 248  : 
+; 249  : 			return &(*curEdge);
 
 	mov	ecx, DWORD PTR _this$[ebp]
 	call	??D?$_List_const_iterator@V?$_List_val@U?$_List_simple_types@VNavGraphEdge@@@std@@@std@@@std@@QBEABVNavGraphEdge@@XZ ; std::_List_const_iterator<std::_List_val<std::_List_simple_types<NavGraphEdge> > >::operator*
+$LN1@begin:
 
-; 248  :         }
+; 250  : 		}
 
 	add	esp, 20					; 00000014H
 	cmp	ebp, esp
@@ -9102,7 +9117,7 @@ _node$ = 12						; size = 4
 ??0ConstEdgeIterator@?$SparseGraph@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@VNavGraphEdge@@@@QAE@ABV1@H@Z PROC ; SparseGraph<NavGraphNode<Trigger<Raven_Bot> *>,NavGraphEdge>::ConstEdgeIterator::ConstEdgeIterator, COMDAT
 ; _this$ = ecx
 
-; 235  :         {
+; 235  : 		{
 
 	push	ebp
 	mov	ebp, esp
@@ -9117,23 +9132,23 @@ _node$ = 12						; size = 4
 	mov	ecx, DWORD PTR _this$[ebp]
 	call	??0?$_List_const_iterator@V?$_List_val@U?$_List_simple_types@VNavGraphEdge@@@std@@@std@@@std@@QAE@XZ
 
-; 233  :                           int                           node): G(graph),
+; 233  : 			int                           node) : G(graph),
 
 	mov	eax, DWORD PTR _this$[ebp]
 	mov	ecx, DWORD PTR _graph$[ebp]
 	mov	DWORD PTR [eax+12], ecx
 
-; 234  :                                                                NodeIndex(node)
+; 234  : 			NodeIndex(node)
 
 	mov	edx, DWORD PTR _this$[ebp]
 	mov	eax, DWORD PTR _node$[ebp]
 	mov	DWORD PTR [edx+16], eax
 
-; 236  :           /* we don't need to check for an invalid node index since if the node is
-; 237  :              invalid there will be no associated edges
-; 238  :          */
+; 236  : 			/* we don't need to check for an invalid node index since if the node is
+; 237  : 			   invalid there will be no associated edges
+; 238  : 		   */
 ; 239  : 
-; 240  :           curEdge = G.m_Edges[NodeIndex].begin();
+; 240  : 			curEdge = G.m_Edges[NodeIndex].begin();
 
 	lea	ecx, DWORD PTR $T1[ebp]
 	push	ecx
@@ -9154,7 +9169,7 @@ _node$ = 12						; size = 4
 	lea	ecx, DWORD PTR $T1[ebp]
 	call	??1?$_List_const_iterator@V?$_List_val@U?$_List_simple_types@VNavGraphEdge@@@std@@@std@@@std@@QAE@XZ
 
-; 241  :         }
+; 241  : 		}
 
 	mov	eax, DWORD PTR _this$[ebp]
 	add	esp, 20					; 00000014H
@@ -29508,7 +29523,7 @@ _this$ = -4						; size = 4
 ?NumNodes@?$SparseGraph@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@VNavGraphEdge@@@@QBEHXZ PROC ; SparseGraph<NavGraphNode<Trigger<Raven_Bot> *>,NavGraphEdge>::NumNodes, COMDAT
 ; _this$ = ecx
 
-; 108  :   int   NumNodes()const{return m_Nodes.size();}
+; 108  : 	int   NumNodes()const { return m_Nodes.size(); }
 
 	push	ebp
 	mov	ebp, esp
@@ -29534,7 +29549,7 @@ _idx$ = 8						; size = 4
 ?GetNode@?$SparseGraph@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@VNavGraphEdge@@@@QBEABV?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@H@Z PROC ; SparseGraph<NavGraphNode<Trigger<Raven_Bot> *>,NavGraphEdge>::GetNode, COMDAT
 ; _this$ = ecx
 
-; 444  : {
+; 446  : {
 
 	push	ebp
 	mov	ebp, esp
@@ -29542,7 +29557,7 @@ _idx$ = 8						; size = 4
 	mov	DWORD PTR [ebp-4], -858993460		; ccccccccH
 	mov	DWORD PTR _this$[ebp], ecx
 
-; 445  :     assert( (idx < (int)m_Nodes.size()) &&
+; 447  : 	assert((idx < (int)m_Nodes.size()) &&
 
 	mov	ecx, DWORD PTR _this$[ebp]
 	call	?size@?$vector@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@V?$allocator@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@@std@@@std@@QBEIXZ ; std::vector<NavGraphNode<Trigger<Raven_Bot> *>,std::allocator<NavGraphNode<Trigger<Raven_Bot> *> > >::size
@@ -29554,24 +29569,24 @@ _idx$ = 8						; size = 4
 	test	eax, eax
 	jne	SHORT $LN4@GetNode
 $LN3@GetNode:
-	push	447					; 000001bfH
+	push	449					; 000001c1H
 	push	OFFSET $SG187035
 	push	OFFSET $SG187036
 	call	__wassert
 	add	esp, 12					; 0000000cH
 $LN4@GetNode:
 
-; 446  :             (idx >=0)              &&
-; 447  :            "<SparseGraph::GetNode>: invalid index");
-; 448  : 
-; 449  :     return m_Nodes[idx];
+; 448  : 		(idx >= 0) &&
+; 449  : 		"<SparseGraph::GetNode>: invalid index");
+; 450  : 
+; 451  : 	return m_Nodes[idx];
 
 	mov	edx, DWORD PTR _idx$[ebp]
 	push	edx
 	mov	ecx, DWORD PTR _this$[ebp]
 	call	??A?$vector@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@V?$allocator@V?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@@std@@@std@@QBEABV?$NavGraphNode@PAV?$Trigger@VRaven_Bot@@@@@@I@Z ; std::vector<NavGraphNode<Trigger<Raven_Bot> *>,std::allocator<NavGraphNode<Trigger<Raven_Bot> *> > >::operator[]
 
-; 450  : }
+; 452  : }
 
 	add	esp, 4
 	cmp	ebp, esp
