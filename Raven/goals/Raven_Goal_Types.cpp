@@ -37,7 +37,7 @@ std::string GoalTypeToString::Convert(int gt)
 
 	case goal_move_to_position:
 
-		return "移动位置";
+		return "规划路径";
 
 	case goal_get_health:
 
@@ -69,7 +69,7 @@ std::string GoalTypeToString::Convert(int gt)
 
 	case goal_hunt_target:
 
-		return "猎取目标";
+		return "搜寻目标";
 
 	case goal_strafe:
 

@@ -1,15 +1,14 @@
 #ifndef TRIGGER_H
 #define TRIGGER_H
-//-----------------------------------------------------------------------------
+//-------------------------------------------- ------------------------------
 //
-//  Name:   Trigger.h
+// 名称：Trigger.h
 //
-//  Author: Mat Buckland (www.ai-junkie.com)
+// 作者：Mat Buckland (www.ai-junkie.com)
 //
-//  Desc:   base class for a trigger. A trigger is an object that is
-//          activated when an entity moves within its region of influence.
+// Desc: 触发器的基类。 触发器是当实体在其影响区域内移动时激活的对象。
 //
-//-----------------------------------------------------------------------------
+//-------------------------------------------- ------------------------------
 #include "game/BaseGameEntity.h"
 #include "TriggerRegion.h"
 
@@ -18,105 +17,97 @@ struct Vector2D;
 
 template <class entity_type>
 class Trigger : public BaseGameEntity
-{   
+{
 private:
 
-  //Every trigger owns a trigger region. If an entity comes within this 
-  //region the trigger is activated
-  TriggerRegion* m_pRegionOfInfluence; 
+	//每个触发器拥有一个触发区域。 如果一个实体进入这个区域，触发器就会被激活
+	TriggerRegion* m_pRegionOfInfluence;
 
-  //if this is true the trigger will be removed from the game
-  bool           m_bRemoveFromGame;
+	//如果这是真的触发器将从游戏中移除
+	bool           m_bRemoveFromGame;
 
-  //it's convenient to be able to deactivate certain types of triggers
-  //on an event. Therefore a trigger can only be triggered when this
-  //value is true (respawning triggers make good use of this facility)
-  bool           m_bActive;
+	//能够在事件上停用某些类型的触发器很方便。 
+	//因此，只有当该值为真时才能触发触发器（重生触发器充分利用了此功能）
+	bool           m_bActive;
 
-  //some types of trigger are twinned with a graph node. This enables
-  //the pathfinding component of an AI to search a navgraph for a specific
-  //type of trigger.
-  int            m_iGraphNodeIndex;
+	//某些类型的触发器与图形节点配对。 这使 AI 的寻路组件能够在导航图中搜索特定类型的触发器。
+	int            m_iGraphNodeIndex;
 
 protected:
-  
-  void SetGraphNodeIndex(int idx){m_iGraphNodeIndex = idx;}
 
-  void SetToBeRemovedFromGame(){m_bRemoveFromGame = true;}
-  void SetInactive(){m_bActive = false;}
-  void SetActive(){m_bActive = true;}
+	void SetGraphNodeIndex(int idx) { m_iGraphNodeIndex = idx; }
 
-  //returns true if the entity given by a position and bounding radius is
-  //overlapping the trigger region
-  bool isTouchingTrigger(Vector2D EntityPos, double EntityRadius)const;
+	void SetToBeRemovedFromGame() { m_bRemoveFromGame = true; }
+	void SetInactive() { m_bActive = false; }
+	void SetActive() { m_bActive = true; }
 
-  //child classes use one of these methods to initialize the trigger region
-  void AddCircularTriggerRegion(Vector2D center, double radius);
-  void AddRectangularTriggerRegion(Vector2D TopLeft, Vector2D BottomRight);
+	//如果由位置和边界半径给出的实体与触发区域重叠，则返回真
+	bool isTouchingTrigger(Vector2D EntityPos, double EntityRadius)const;
+
+	//子类使用这些方法之一来初始化触发区域
+	void AddCircularTriggerRegion(Vector2D center, double radius);
+	void AddRectangularTriggerRegion(Vector2D TopLeft, Vector2D BottomRight);
 
 public:
 
-  Trigger(unsigned int id):BaseGameEntity(id),
-                           m_bRemoveFromGame(false),
-                           m_bActive(true),
-                           m_iGraphNodeIndex(-1),
-                           m_pRegionOfInfluence(NULL)
-                           
-  {}
+	Trigger(unsigned int id) :BaseGameEntity(id),
+		m_bRemoveFromGame(false),
+		m_bActive(true),
+		m_iGraphNodeIndex(-1),
+		m_pRegionOfInfluence(NULL)
 
-  virtual ~Trigger(){delete m_pRegionOfInfluence;}
+	{}
 
-  //when this is called the trigger determines if the entity is within the
-  //trigger's region of influence. If it is then the trigger will be 
-  //triggered and the appropriate action will be taken.
-  virtual void  Try(entity_type*) = 0;
+	virtual ~Trigger() { delete m_pRegionOfInfluence; }
 
-  //called each update-step of the game. This methods updates any internal
-  //state the trigger may have
-  virtual void  Update() = 0;
+	//当它被调用时，触发器确定实体是否在触发器的影响区域内。 如果是，则将触发触发器并采取适当的操作。
+	virtual void  Try(entity_type*) = 0;
 
-  int  GraphNodeIndex()const{return m_iGraphNodeIndex;}
-  bool isToBeRemoved()const{return m_bRemoveFromGame;}
-  bool isActive(){return m_bActive;}
+	//调用游戏的每个更新步骤。 此方法更新触发器可能具有的任何内部状态
+	virtual void  Update() = 0;
+
+	int  GraphNodeIndex()const { return m_iGraphNodeIndex; }
+	bool isToBeRemoved()const { return m_bRemoveFromGame; }
+	bool isActive() { return m_bActive; }
 };
 
- 
+
 //------------------------ AddCircularTriggerRegion ---------------------------
 //-----------------------------------------------------------------------------
 template <class entity_type>
 void Trigger<entity_type>::AddCircularTriggerRegion(Vector2D center,
-                                                    double    radius)
+	double    radius)
 {
-  //if this replaces an existing region, tidy up memory
-  if (m_pRegionOfInfluence) delete m_pRegionOfInfluence;
+	//如果这替换了现有区域，则清理内存
+	if (m_pRegionOfInfluence) delete m_pRegionOfInfluence;
 
-  m_pRegionOfInfluence = new TriggerRegion_Circle(center, radius);
+	m_pRegionOfInfluence = new TriggerRegion_Circle(center, radius);
 }
 
 //--------------------- AddRectangularTriggerRegion ---------------------------
 //-----------------------------------------------------------------------------
 template <class entity_type>
 void Trigger<entity_type>::AddRectangularTriggerRegion(Vector2D TopLeft,
-                                                       Vector2D BottomRight)
+	Vector2D BottomRight)
 {
-  //if this replaces an existing region, tidy up memory
-  if (m_pRegionOfInfluence) delete m_pRegionOfInfluence;
+	//如果这替换了现有区域，则清理内存
+	if (m_pRegionOfInfluence) delete m_pRegionOfInfluence;
 
-  m_pRegionOfInfluence = new TriggerRegion_Rectangle(TopLeft, BottomRight);
+	m_pRegionOfInfluence = new TriggerRegion_Rectangle(TopLeft, BottomRight);
 }
 
 //--------------------- isTouchingTrigger -------------------------------------
 //-----------------------------------------------------------------------------
 template <class entity_type>
 bool Trigger<entity_type>::isTouchingTrigger(Vector2D EntityPos,
-                                             double    EntityRadius)const
+	double    EntityRadius)const
 {
-  if (m_pRegionOfInfluence) 
-  {
-    return m_pRegionOfInfluence->isTouching(EntityPos, EntityRadius);
-  }
-    
-  return false;
+	if (m_pRegionOfInfluence)
+	{
+		return m_pRegionOfInfluence->isTouching(EntityPos, EntityRadius);
+	}
+
+	return false;
 }
 
 

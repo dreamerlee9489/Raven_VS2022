@@ -1,16 +1,15 @@
 #ifndef TRIGGER_LIMITEDLIFETIME_H
 #define TRIGGER_LIMITEDLIFETIME_H
 #pragma warning (disable:4786)
-//-----------------------------------------------------------------------------
+//-------------------------------------------- ------------------------------
 //
-//  Name:     Trigger_LimitedLifetime.h
+// 名称：Trigger_LimitedLifetime.h
 //
-//  Author:   Mat Buckland
+// 作者：马特·巴克兰
 //
-//  Desc:     defines a trigger that only remains in the game for a specified
-//            number of update steps
+// Desc: 定义一个触发器，它只在游戏中保留指定数量的更新步骤
 //
-//-----------------------------------------------------------------------------
+//-------------------------------------------- ------------------------------
 #include "Trigger.h"
 
 
@@ -19,31 +18,29 @@ class Trigger_LimitedLifetime : public Trigger<entity_type>
 {
 protected:
 
-  //the lifetime of this trigger in update-steps
-  int m_iLifetime;
+	//这个触发器在更新步骤中的生命周期
+	int m_iLifetime;
 
 public:
 
-  Trigger_LimitedLifetime(int lifetime):Trigger<entity_type>(BaseGameEntity::GetNextValidID()),
-                                        m_iLifetime(lifetime)
-  {}
+	Trigger_LimitedLifetime(int lifetime) :Trigger<entity_type>(BaseGameEntity::GetNextValidID()),
+		m_iLifetime(lifetime)
+	{}
 
-  virtual ~Trigger_LimitedLifetime(){}
+	virtual ~Trigger_LimitedLifetime() {}
 
-  //children of this class should always make sure this is called from within
-  //their own update method
-  virtual void Update()
-  {
-    //if the lifetime counter expires set this trigger to be removed from
-    //the game
-    if (--m_iLifetime <= 0)
-    {
-      SetToBeRemovedFromGame();
-    }
-  }
+	//这个类的孩子应该总是确保这是从他们自己的更新方法中调用的
+	virtual void Update()
+	{
+		//如果生命周期计数器到期，设置这个触发器从游戏中移除
+		if (--m_iLifetime <= 0)
+		{
+			SetToBeRemovedFromGame();
+		}
+	}
 
-  //to be implemented by child classes
-  virtual void  Try(entity_type*) = 0;
+	//由子类实现
+	virtual void  Try(entity_type*) = 0;
 };
 
 

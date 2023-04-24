@@ -1,18 +1,16 @@
 #ifndef RAVEN_MAP_H
 #define RAVEN_MAP_H
 #pragma warning (disable:4786)
-//-----------------------------------------------------------------------------
+//-------------------------------------------- ------------------------------
 //
-//  Name:   Raven_Map.h
+// 名称：Raven_Map.h
 //
-//  Author: Mat Buckland (www.ai-junkie.com)
+// 作者：Mat Buckland (www.ai-junkie.com)
 //
-//  Desc:   this class creates and stores all the entities that make up the
-//          Raven game environment. (walls, bots, health etc)
+// Desc: 此类创建并存储构成 Raven 游戏环境的所有实体。 （墙壁、机器人、健康等）
 //
-//          It can read a Raven map editor file and recreate the necessary
-//          geometry.
-//-----------------------------------------------------------------------------
+// 它可以读取 Raven 地图编辑器文件并重新创建必要的几何图形。
+//-------------------------------------------- ------------------------------
 #include <vector>
 #include <string>
 #include <list>
@@ -42,29 +40,25 @@ public:
   
 private:
  
-  //the walls that comprise the current map's architecture. 
+  //构成当前地图建筑的墙。
   std::vector<Wall2D*>                m_Walls;
 
-  //trigger are objects that define a region of space. When a raven bot
-  //enters that area, it 'triggers' an event. That event may be anything
-  //from increasing a bot's health to opening a door or requesting a lift.
+  //触发器是定义空间区域的对象。 当乌鸦机器人进入该区域时，它会“触发”一个事件。 该事件可能是任何事情，从增加机器人的健康到开门或请求搭便车。
   TriggerSystem                      m_TriggerSystem;    
 
-  //this holds a number of spawn positions. When a bot is instantiated
-  //it will appear at a randomly selected point chosen from this vector
+  //这包含许多生成位置。 当机器人被实例化时，它将出现在从该向量中随机选择的点
   std::vector<Vector2D>              m_SpawnPoints;
 
-  //a map may contain a number of sliding doors.
+  //一张地图可能包含多个滑动门。
   std::vector<Raven_Door*>           m_Doors;
  
-  //this map's accompanying navigation graph
+  //这张地图附带的导航图
   NavGraph*                          m_pNavGraph;  
 
-  //the graph nodes will be partitioned enabling fast lookup
+  //图形节点将被分区以实现快速查找
   CellSpace*                        m_pSpacePartition;
 
-  //the size of the search radius the cellspace partition uses when looking for 
-  //neighbors 
+  //单元格空间分区在寻找邻居时使用的搜索半径的大小
   double                             m_dCellSpaceNeighborhoodRange;
 
   int m_iSizeX;
@@ -72,12 +66,10 @@ private:
   
   void  PartitionNavGraph();
 
-  //this will hold a pre-calculated lookup table of the cost to travel from
-  //one node to any other.
+  //这将保存一个预先计算好的从一个节点到任何其他节点的成本查找表。
   std::vector<std::vector<double> >  m_PathCosts;
 
-
-    //stream constructors for loading from a file
+  //从文件加载的流构造函数
   void AddWall(std::ifstream& in);
   void AddSpawnPoint(std::ifstream& in);
   void AddHealth_Giver(std::ifstream& in);
@@ -94,18 +86,17 @@ public:
 
   void Render();
 
-  //loads an environment from a file
+  //从文件加载环境
   bool LoadMap(const std::string& FileName); 
 
-  //adds a wall and returns a pointer to that wall. (this method can be
-  //used by objects such as doors to add walls to the environment)
+  //添加一堵墙并返回指向该墙的指针。 （此方法可用于门等对象为环境添加墙）
   Wall2D* AddWall(Vector2D from, Vector2D to);
 
   void    AddSoundTrigger(Raven_Bot* pSoundSource, double range);
 
   double   CalculateCostToTravelBetweenNodes(int nd1, int nd2)const;
 
-  //returns the position of a graph node selected at random
+  //返回随机选择的图节点的位置
   Vector2D GetRandomNodeLocation()const;
   
   
@@ -122,7 +113,6 @@ public:
   int                                GetSizeY()const{return m_iSizeY;}
   int                                GetMaxDimension()const{return Maximum(m_iSizeX, m_iSizeY);}
   double                             GetCellSpaceNeighborhoodRange()const{return m_dCellSpaceNeighborhoodRange;}
-
 };
 
 

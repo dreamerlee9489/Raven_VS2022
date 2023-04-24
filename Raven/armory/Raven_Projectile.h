@@ -1,17 +1,15 @@
 #ifndef PROJECTILE_H
 #define PROJECTILE_H
 #pragma warning (disable:4786)
-//-----------------------------------------------------------------------------
+//-------------------------------------------- ------------------------------
 //
-//  Name:   Raven_Projectile.h
+// 名称：Raven_Projectile.h
 //
-//  Author: Mat Buckland (www.ai-junkie.com)
+// 作者：Mat Buckland (www.ai-junkie.com)
 //
-//  Desc:   Base class to define a projectile type. A projectile of the correct
-//          type is created whnever a weapon is fired. In Raven there are four
-//          types of projectile: Slugs (railgun), Pellets (shotgun), Rockets
-//          (rocket launcher ) and Bolts (Blaster) 
-//-----------------------------------------------------------------------------
+// Desc: 定义射弹类型的基类。 每当武器开火时，都会创建正确类型的射弹。 
+// 在 Raven 中有四种射弹：Slugs（轨道炮）、Pellets（散弹枪）、Rockets（火箭发射器）和 Bolts（冲击波）
+//-------------------------------------------- ------------------------------
 #include "game/MovingEntity.h"
 #include "2d/Vector2D.h"
 #include "time/CrudeTimer.h"
@@ -20,104 +18,91 @@
 class Raven_Game;
 class Raven_Bot;
 
-
 class Raven_Projectile : public MovingEntity
 {
 protected:
 
-  //the ID of the entity that fired this
-  int           m_iShooterID;
+	//触发这个的实体的ID
+	int           m_iShooterID;
 
-  //the place the projectile is aimed at
-  Vector2D      m_vTarget;
+	//子弹瞄准的地方
+	Vector2D      m_vTarget;
 
-  //a pointer to the world data
-  Raven_Game*   m_pWorld;
+	//指向世界数据的指针
+	Raven_Game* m_pWorld;
 
-  //where the projectile was fired from
-  Vector2D      m_vOrigin;
+	//射弹从哪里发射
+	Vector2D      m_vOrigin;
 
-  //how much damage the projectile inflicts
-  int           m_iDamageInflicted;
+	//弹丸造成多少伤害
+	int           m_iDamageInflicted;
 
-  //is it dead? A dead projectile is one that has come to the end of its
-  //trajectory and cycled through any explosion sequence. A dead projectile
-  //can be removed from the world environment and deleted.
-  bool          m_bDead;
+	//它死了吗？ 死弹是指已经到达其轨迹末端并循环通过任何爆炸序列的弹丸。 死弹可以从世界环境中移除并删除。
+	bool          m_bDead;
 
-  //this is set to true as soon as a projectile hits something
-  bool          m_bImpacted;
+	//一旦射弹击中某物，此设置为真
+	bool          m_bImpacted;
 
-  //the position where this projectile impacts an object
-  Vector2D      m_vImpactPoint;
+	//这个弹丸撞击物体的位置
+	Vector2D      m_vImpactPoint;
 
-  //this is stamped with the time this projectile was instantiated. This is
-  //to enable the shot to be rendered for a specific length of time
-  double       m_dTimeOfCreation;
+	//这是用这个射弹被实例化的时间标记的。 这是为了使镜头能够在特定的时间长度内渲染
+	double       m_dTimeOfCreation;
 
-  Raven_Bot*            GetClosestIntersectingBot(Vector2D From,
-                                                  Vector2D To)const;
+	Raven_Bot* GetClosestIntersectingBot(Vector2D From,
+		Vector2D To)const;
 
-  std::list<Raven_Bot*> GetListOfIntersectingBots(Vector2D From,
-                                                  Vector2D To)const;
+	std::list<Raven_Bot*> GetListOfIntersectingBots(Vector2D From,
+		Vector2D To)const;
 
 
 public:
 
-  Raven_Projectile(Vector2D  target,   //the target's position
-                   Raven_Game* world,  //a pointer to the world data
-                   int      ShooterID, //the ID of the bot that fired this shot
-                   Vector2D origin,  //the start position of the projectile
-                   Vector2D heading,   //the heading of the projectile
-                   int      damage,    //how much damage it inflicts
-                   double    scale,    
-                   double    MaxSpeed, 
-                   double    mass,
-                   double    MaxForce):  MovingEntity(origin,
-                                                     scale,
-                                                     Vector2D(0,0),
-                                                     MaxSpeed,
-                                                     heading,
-                                                     mass,
-                                                     Vector2D(scale, scale),
-                                                     0, //max turn rate irrelevant here, all shots go straight
-                                                     MaxForce),
+	Raven_Projectile(Vector2D  target,   //目标位置
+		Raven_Game* world,  //指向世界数据的指针
+		int      ShooterID, //开枪的机器人的ID
+		Vector2D origin,  //弹丸的起始位置
+		Vector2D heading,   //弹丸的航向
+		int      damage,    //它造成了多少伤害
+		double    scale,
+		double    MaxSpeed,
+		double    mass,
+		double    MaxForce) : MovingEntity(origin,
+			scale,
+			Vector2D(0, 0),
+			MaxSpeed,
+			heading,
+			mass,
+			Vector2D(scale, scale),
+			0, //最大转弯率在这里无关紧要，所有的镜头都是直的
+			MaxForce),
 
-                                        m_vTarget(target),
-                                        m_bDead(false),
-                                        m_bImpacted(false),
-                                        m_pWorld(world),
-                                        m_iDamageInflicted(damage),
-                                        m_vOrigin(origin),
-                                        m_iShooterID(ShooterID)
-                
-
-  {m_dTimeOfCreation = Clock->GetCurrentTime();}
-
-  //unimportant for this class unless you want to implement a full state 
-  //save/restore (which can be useful for debugging purposes)
-  void Write(std::ostream&  os)const{}
-  void Read (std::ifstream& is){}
-
-  //must be implemented
-  virtual void Update() = 0;
-  virtual void Render() = 0;
-  
-  //set to true if the projectile has impacted and has finished any explosion 
-  //sequence. When true the projectile will be removed from the game
-  bool isDead()const{return m_bDead;}
-  
-  //true if the projectile has impacted but is not yet dead (because it
-  //may be exploding outwards from the point of impact for example)
-  bool HasImpacted()const{return m_bImpacted;}
+		m_vTarget(target),
+		m_bDead(false),
+		m_bImpacted(false),
+		m_pWorld(world),
+		m_iDamageInflicted(damage),
+		m_vOrigin(origin),
+		m_iShooterID(ShooterID)
 
 
+	{
+		m_dTimeOfCreation = Clock->GetCurrentTime();
+	}
 
+	//对于这个类不重要，除非你想实现一个完整的状态保存/恢复（这对调试很有用）
+	void Write(std::ostream& os)const {}
+	void Read(std::ifstream& is) {}
+
+	//must be implemented
+	virtual void Update() = 0;
+	virtual void Render() = 0;
+
+	//如果射弹已经撞击并完成了任何爆炸序列，则设置为真。 当为真时，射弹将从游戏中移除
+	bool isDead()const { return m_bDead; }
+
+	//如果射弹已经撞击但还没有死亡则为真（例如因为它可能从撞击点向外爆炸）
+	bool HasImpacted()const { return m_bImpacted; }
 };
-
-
-
-
-
 
 #endif
