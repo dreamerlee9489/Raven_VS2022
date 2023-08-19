@@ -17,27 +17,19 @@ class Raven_Feature
 {
 public:
 
-  //returns a value between 0 and 1 based on the bot's health. The better
-  //the health, the higher the rating
-  static double Health(Raven_Bot* pBot);
-  
-  //returns a value between 0 and 1 based on the bot's closeness to the 
-  //given item. the further the item, the higher the rating. If there is no
-  //item of the given type present in the game world at the time this method
-  //is called the value returned is 1
-  static double DistanceToItem(Raven_Bot* pBot, int ItemType);
-  
-  //returns a value between 0 and 1 based on how much ammo the bot has for
-  //the given weapon, and the maximum amount of ammo the bot can carry. The
-  //closer the amount carried is to the max amount, the higher the score
-  static double IndividualWeaponStrength(Raven_Bot* pBot, int WeaponType);
+	//根据机器人的健康状况返回一个介于 0 和 1 之间的值。 身体越好，评分越高
+	static double Health(Raven_Bot* pBot);
 
-  //returns a value between 0 and 1 based on the total amount of ammo the
-  //bot is carrying each of the weapons. Each of the three weapons a bot can
-  //pick up can contribute a third to the score. In other words, if a bot
-  //is carrying a RL and a RG and has max ammo for the RG but only half max
-  //for the RL the rating will be 1/3 + 1/6 + 0 = 0.5
-  static double TotalWeaponStrength(Raven_Bot* pBot);
+	//根据机器人与给定项目的接近程度返回 0 到 1 之间的值。 项目越远，评级越高。 
+	//如果在调用此方法时游戏世界中不存在给定类型的项目，则返回值为 1
+	static double DistanceToItem(Raven_Bot* pBot, int ItemType);
+
+	//根据机器人对给定武器的弹药量以及机器人可以携带的最大弹药量，返回 0 到 1 之间的值。 携带量越接近最大量，得分越高
+	static double IndividualWeaponStrength(Raven_Bot* pBot, int WeaponType);
+
+	//根据机器人携带的每种武器的弹药总量返回一个介于 0 和 1 之间的值。 机器人可以拿起的三种武器中的每一种都可以贡献三分之一的分数。 
+	//换句话说，如果一个机器人携带一个 RL 和一个 RG，并且 RG 的弹药是最大的，但 RL 的弹药只有一半，那么评级将为 1/3 + 1/6 + 0 = 0.5
+	static double TotalWeaponStrength(Raven_Bot* pBot);
 };
 
 

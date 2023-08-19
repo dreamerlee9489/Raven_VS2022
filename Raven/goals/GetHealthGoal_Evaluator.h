@@ -18,14 +18,14 @@ class GetHealthGoal_Evaluator : public Goal_Evaluator
 {
 public:
 
-  GetHealthGoal_Evaluator(double bias):Goal_Evaluator(bias){}
-  
-  double CalculateDesirability(Raven_Bot* pBot);
+	GetHealthGoal_Evaluator(double bias) :Goal_Evaluator(bias) {}
 
-  void  SetGoal(Raven_Bot* pEnt);
+	double CalculateDesirability(Raven_Bot* pBot);
 
-  void RenderInfo(Vector2D Position, Raven_Bot* pBot);
+	void  SetGoal(Raven_Bot* pEnt);
+
+	void RenderInfo(Vector2D Position, Raven_Bot* pBot);
 };
 
 #endif
-    
+
